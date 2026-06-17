@@ -98,11 +98,10 @@ fun Home(modifier: Modifier = Modifier){
                             }
                         }
                         Column(modifier = Modifier.weight(1f)){
-                            Text("Name of the Songs", fontSize = 16.sp, fontWeight = FontWeight.Bold, overflow = TextOverflow.MiddleEllipsis)
+                            Text("Name of the Songs", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
                             Text("Album: Album Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
                         }
                         Icon(modifier = Modifier.size(30.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__play_24_filled), contentDescription = null)
-                        Icon(modifier = Modifier.size(30.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__next_24_filled), contentDescription = null)
                     }
                     Slider(modifier = Modifier.fillMaxWidth().height(2.dp),
                         track = { sliderState -> SliderDefaults.Track(

@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -49,14 +51,21 @@ fun Playing(modifier: Modifier = Modifier){
         Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = colorStops)))
         Column(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 4.dp) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RepeatToggle{ }
-                        ShuffleToggle { }
-                    }
-                }
-                Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 4.dp) {
+                Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
                     FavouriteToggle { }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            RepeatToggle{ }
+                            ShuffleToggle { }
+                        }
+                    }
+                    Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
+                        IconButton(onClick = {},  colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary)) {
+                            Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__music_note_2_play_20_regular), contentDescription = null)
+                        }
+                    }
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally){
