@@ -17,12 +17,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -87,9 +91,10 @@ fun Home(modifier: Modifier = Modifier){
                     Icon(modifier = Modifier.size(28.dp), imageVector = ImageVector.vectorResource(R.drawable.glyphs__cog_bold), contentDescription = null)
                 },
                 scrollBehavior = scrollBehavior
-            ) },
+            )
+        },
         bottomBar = {
-            Surface(modifier = Modifier.fillMaxWidth().padding(10.dp).clickable{ showPlaying = true }, shadowElevation = 4.dp, shape = RoundedCornerShape(12.dp)){
+            Surface(modifier = Modifier.fillMaxWidth().clickable{ showPlaying = true }, shadowElevation = 4.dp, shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)){
                 Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)){
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)){
                         Surface(modifier = Modifier.size(60.dp), color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(10.dp)) {
@@ -99,7 +104,7 @@ fun Home(modifier: Modifier = Modifier){
                         }
                         Column(modifier = Modifier.weight(1f)){
                             Text("Name of the Songs", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
-                            Text("Album: Album Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
+                            Text("Artist: Artist Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
                         }
                         Icon(modifier = Modifier.size(30.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__play_24_filled), contentDescription = null)
                     }
