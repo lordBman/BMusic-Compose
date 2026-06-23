@@ -6,11 +6,12 @@ import android.provider.MediaStore
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 
-data class Song(val id: Long, val displayName: String, val title: String, val artist: String, val album: String, val duration: Long, val contentUri: Uri){
+data class Song(val id: Long, val displayName: String, val title: String, val artist: String, val album: String, val duration: Long, val contentUri: Uri, val artworkUri: Uri? = null){
     fun toMediaItem(): MediaItem {
         return MediaItem.Builder().setMediaId(id.toString()).setUri(contentUri)
             .setMediaMetadata(
-                MediaMetadata.Builder().setDisplayTitle(displayName).setTitle(title).setArtist(artist).setAlbumTitle(album).setDurationMs(duration).setIsPlayable(true).build()
+                MediaMetadata.Builder().setDisplayTitle(displayName).setTitle(title).setArtist(artist).setAlbumTitle(album).setDurationMs(duration).setIsPlayable(true)
+                    .build()
             ).build()
     }
 
@@ -23,13 +24,14 @@ data class Song(val id: Long, val displayName: String, val title: String, val ar
             val album = mediaItem.mediaMetadata.albumTitle?.toString() ?: "Unknown Album"
             val duration = mediaItem.mediaMetadata.durationMs ?: 0
             val contentURI = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+            val artworkUri = mediaItem.mediaMetadata.artworkUri
 
-            return Song(id, displayName, title, artist, album, duration, contentURI)
+            return Song(id, displayName, title, artist, album, duration, contentURI, artworkUri)
         }
     }
 }
 
-data class Album(val id: Long, val name: String, val artist: String, val songCount: Int){
+data class Album(val id: Long, val name: String, val artist: String, val songCount: Int, val artworkUri: Uri? = null){
     fun toMediaItem(): MediaItem {
         return MediaItem.Builder().setMediaId("album_${id}")
             .setMediaMetadata(

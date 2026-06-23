@@ -3,12 +3,14 @@ package com.bsoft.compose.bmusic.data.repositories
 import android.content.ContentUris
 import android.content.Context
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import com.bsoft.compose.bmusic.data.Album
 import com.bsoft.compose.bmusic.data.Artist
 import com.bsoft.compose.bmusic.data.Song
+import androidx.core.net.toUri
 
 class SongRepository(private val context: Context) {
     val songs by lazy { return@lazy fetchSongs() }
@@ -17,8 +19,11 @@ class SongRepository(private val context: Context) {
 
     private fun fetchAlbums(): List<Album> {
         val projection = arrayOf(MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM, MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.NUMBER_OF_SONGS)
+
+        val selection = "${MediaStore.Audio.Albums.ARTIST} IS NOT NULL OR ${MediaStore.Audio.Albums.ARTIST} != ?"
+        val selectionArgs = arrayOf("")
         val sortOrder = "${MediaStore.Audio.Albums.ALBUM} ASC"
-        val cursor = context.contentResolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, projection, null, null, sortOrder)
+        val cursor = context.contentResolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, sortOrder)
 
         return cursor?.use {
             val idCol = it.getColumnIndex(MediaStore.Audio.Albums._ID)
@@ -27,7 +32,16 @@ class SongRepository(private val context: Context) {
             val countCol = it.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
             buildList {
                 while (it.moveToNext()) {
-                    add(Album(id = it.getLong(idCol), name = it.getString(nameCol) ?: "", artist = it.getString(artistCol) ?: "", songCount = it.getInt(countCol)))
+                    val id = it.getLong(idCol)
+                    val name = it.getString(nameCol) ?: ""
+                    val artist = it.getString(artistCol) ?: ""
+                    val songCount = it.getInt(countCol)
+                    // Reconstruct the explicit Content Uri for the album art
+                    val artworkUri = ContentUris.withAppendedId(
+                        "content://media/external/audio/albumart".toUri(),
+                        id
+                    )
+                    add(Album(id, name, artist, songCount))
                 }
             }
         } ?: emptyList()
@@ -67,10 +81,11 @@ class SongRepository(private val context: Context) {
             MediaStore.Audio.Media.DURATION
         )
 
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != ? AND ${MediaStore.Audio.Media.DURATION} >= ?"
+        val selectionArgs = arrayOf("0", "60000")
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
-        return context.contentResolver.query(collection, projection, selection, null, sortOrder)?.use { cursor ->
+        return context.contentResolver.query(collection, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
             val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)

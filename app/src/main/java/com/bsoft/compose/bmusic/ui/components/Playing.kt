@@ -1,5 +1,7 @@
 package com.bsoft.compose.bmusic.ui.components
 
+import android.graphics.Bitmap
+import android.util.Size
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,12 +27,18 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,15 +47,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.data.Song
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
+import com.bsoft.compose.bmusic.utils.Util
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Playing(modifier: Modifier = Modifier){
+fun Playing(
+    modifier: Modifier = Modifier, song: Song?, playing: Boolean,
+    previous: ()-> Unit = {}, rewind: ()-> Unit = {},
+    next: ()-> Unit = {}, forward: ()-> Unit = {},
+    queue: ()-> Unit = {}, playToggle: ()-> Unit = {},
+){
     val colorStops = arrayOf( 0.0f to Color.Transparent, 0.2f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), 0.55f to MaterialTheme.colorScheme.surface)
 
+    val context = LocalContext.current
+
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    LaunchedEffect(song) {
+        bitmap = Util.getAudioArtwork(context, song?.id ?: 0, song?.id ?: 0, Size(300, 300))
+    }
+
     Box(modifier = modifier.fillMaxWidth().height(420.dp)){
-        Image(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), painter = painterResource(id = R.drawable.lady), contentScale = ContentScale.FillWidth, contentDescription = null)
+        if(bitmap == null){
+            Image(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), painter = painterResource(id = R.drawable.lady), contentScale = ContentScale.FillWidth, contentDescription = null)
+        }else{
+            BitmapImage(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), bitmap = bitmap as Bitmap, contentScale = ContentScale.FillWidth)
+        }
         Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = colorStops)))
         Column(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -73,19 +99,23 @@ fun Playing(modifier: Modifier = Modifier){
                 Text("Album: Album Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
             }
             Row(modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SmallFloatingActionButton(onClick = {}) {
+                SmallFloatingActionButton(onClick = { previous() }) {
                     Icon(modifier = Modifier.size(18.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__previous_24_filled), contentDescription = null)
                 }
-                SmallFloatingActionButton(onClick = {}) {
+                SmallFloatingActionButton(onClick = { rewind() }) {
                     Icon(modifier = Modifier.size(18.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__rewind_24_filled), contentDescription = null)
                 }
-                FloatingActionButton (onClick = {}, shape = CircleShape, modifier = Modifier.size(80.dp)) {
-                    Icon(modifier = Modifier.size(40.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__play_24_filled), contentDescription = null)
+                FloatingActionButton (onClick = {playToggle()}, shape = CircleShape, modifier = Modifier.size(80.dp)) {
+                    if(playing){
+                        Icon(modifier = Modifier.size(40.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__pause_24_filled), contentDescription = null)
+                    }else{
+                        Icon(modifier = Modifier.size(40.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__play_24_filled), contentDescription = null)
+                    }
                 }
-                SmallFloatingActionButton(onClick = {}) {
+                SmallFloatingActionButton(onClick = { forward() }) {
                     Icon(modifier = Modifier.size(18.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__fast_forward_24_filled), contentDescription = null)
                 }
-                SmallFloatingActionButton(onClick = {}) {
+                SmallFloatingActionButton(onClick = { next() }) {
                     Icon(modifier = Modifier.size(18.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__next_24_filled), contentDescription = null)
                 }
             }
@@ -111,6 +141,6 @@ fun Playing(modifier: Modifier = Modifier){
 @Composable
 private fun PlayingPreview(){
     BMusicTheme {
-        Playing()
+        Playing(song = null, playing = false)
     }
 }

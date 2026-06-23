@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bsoft.compose.bmusic.HomeDestination
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.ui.components.BottomControl
 import com.bsoft.compose.bmusic.ui.components.Playing
 import com.bsoft.compose.bmusic.ui.pages.AlbumPage
 import com.bsoft.compose.bmusic.ui.pages.ArtistsPage
@@ -129,37 +130,8 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
             )
         },
         bottomBar = {
-            Surface(modifier = Modifier.fillMaxWidth().clickable{ showPlaying = true }, shadowElevation = 4.dp, shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)){
-                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)){
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)){
-                        Surface(modifier = Modifier.size(60.dp), color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(10.dp)) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.tertiary, imageVector = ImageVector.vectorResource(R.drawable.solar__music_notes_bold_duotone), contentDescription = null)
-                            }
-                        }
-                        Column(modifier = Modifier.weight(1f)){
-                            Text(playState.current?.title ?: "______", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
-                            Text("Artist: ${playState.current?.artist ?: "_____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
-                        }
-                        IconButton(onClick = { playingViewModel.togglePlayPause() }) {
-                            if(playState.playing){
-                                Icon(modifier = Modifier.size(30.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__pause_24_filled), contentDescription = null)
-                            }else{
-                                Icon(modifier = Modifier.size(30.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__play_24_filled), contentDescription = null)
-                            }
-                        }
-                    }
-                    Slider(modifier = Modifier.fillMaxWidth().height(2.dp),
-                        track = { sliderState -> SliderDefaults.Track(
-                                modifier = Modifier.height(2.dp),
-                                sliderState = sliderState,
-                                thumbTrackGapSize = 0.dp,
-                                trackInsideCornerSize = 0.dp
-                            )
-                        },
-                        thumb = {},
-                        onValueChange = {}, value =  0f, valueRange = 0f..(playState.current?.duration ?: 0).toFloat())
-                }
+            BottomControl(song = playState.current, playing = playState.playing, clicked = { showPlaying = true }){
+                playingViewModel.togglePlayPause()
             }
         }
         ) { contentPadding ->
@@ -185,8 +157,8 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                     )
                 }
             })
-            HorizontalPager(modifier = modifier.fillMaxWidth().weight(1f), state = pagerState) {
-                when (pagerState.currentPage) {
+            HorizontalPager(modifier = modifier.fillMaxWidth().weight(1f), state = pagerState) { page ->
+                when (page) {
                     0 -> SongsPage(songs = songState.songs){ index, song ->
                         playingViewModel.playSong(index = index)
                     }
@@ -205,7 +177,12 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                 onDismissRequest = { showPlaying = false },
                 dragHandle = null) {
-                Playing()
+                Playing(song = playState.current, playing = playState.playing,
+                    next = { playingViewModel.next() },
+                    previous = { playingViewModel.previous() }
+                ){
+                    playingViewModel.togglePlayPause()
+                }
             }
         }
     }

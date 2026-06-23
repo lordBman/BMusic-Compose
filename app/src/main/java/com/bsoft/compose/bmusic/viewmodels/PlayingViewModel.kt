@@ -104,6 +104,22 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
+    fun next() {
+        mediaBrowser?.let {
+            if(it.hasNextMediaItem()){
+                it.seekToNextMediaItem()
+            }
+        }
+    }
+
+    fun previous() {
+        mediaBrowser?.let {
+            if(it.hasPreviousMediaItem()){
+                it.seekToPreviousMediaItem()
+            }
+        }
+    }
+
     override fun onCleared() {
         mediaBrowser?.release()
         mediaBrowser = null
