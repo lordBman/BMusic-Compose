@@ -27,19 +27,35 @@ class PlayingViewModel: ViewModel() {
     val playerListener = object : Player.Listener {
 
         // Triggered when the player starts buffering, becomes ready, or ends
-        override fun onPlaybackStateChanged(playbackState: Int) {
+        /*override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
                 Player.STATE_BUFFERING -> { /* Show loading spinner */ }
                 Player.STATE_READY -> { /* Hide loading spinner */ }
                 Player.STATE_ENDED -> { /* Play next video or loop */ }
                 Player.STATE_IDLE -> { /* Player stopped or failed */ }
             }
+        }*/
+
+        override fun onEvents(player: Player, events: Player.Events) {
+            player.currentMediaItem?.let { item ->
+                if(item.mediaMetadata.isPlayable == true && mutableState.value.current?.title != item.mediaMetadata?.title){
+                    mutableState.update { it.copy(current = Song.fromMediaItem(item)) }
+                }
+            }
+
+            when (player.playbackState) {
+                Player.STATE_BUFFERING -> { /* Show loading spinner */ }
+                Player.STATE_READY -> { /* Hide loading spinner */ }
+                Player.STATE_ENDED -> { /* Play next video or loop */ }
+                Player.STATE_IDLE -> { /* Player stopped or failed */ }
+            }
+            mutableState.update { it.copy(position = player.currentPosition, playing = player.isPlaying) }
         }
 
         // Triggered when play/pause changes
-        override fun onIsPlayingChanged(playing: Boolean) {
+        /*override fun onIsPlayingChanged(playing: Boolean) {
             mutableState.update { it.copy(playing = playing) }
-        }
+        }*/
 
         // Triggered when a critical playback error occurs
         override fun onPlayerError(error: PlaybackException) {
@@ -47,14 +63,19 @@ class PlayingViewModel: ViewModel() {
         }
 
         // Triggered when moving to a new song/video in the playlist
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        /*override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             // Update track metadata like title or artwork in UI
             mediaItem?.let{ item ->
                 if (item.mediaMetadata.isPlayable == true){
                     mutableState.update { it.copy(current = Song.fromMediaItem(item)) }
                 }
             }
-        }
+        }*/
+
+        /*override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {
+            //mutableState.update { it.copy(position = seekForwardIncrementMs) }
+            super.onSeekForwardIncrementChanged(seekForwardIncrementMs)
+        }*/
     }
 
     fun initializeMediaController(context: Context) {
@@ -63,16 +84,9 @@ class PlayingViewModel: ViewModel() {
             val controllerFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
             controllerFuture.addListener({
                 mediaBrowser = controllerFuture.get()
+                mediaBrowser.setMediaSourceFactory(DefaultMediaSourceFactory(context))
                 mediaBrowser?.addListener(playerListener)
             }, MoreExecutors.directExecutor())
-        }
-    }
-
-    fun playMedia(song: Song) {
-        mediaBrowser?.apply {
-            setMediaItem(song.toMediaItem())
-            prepare()
-            play()
         }
     }
 

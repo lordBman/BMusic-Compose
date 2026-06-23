@@ -42,7 +42,7 @@ fun AlbumView(modifier: Modifier = Modifier, album: Album, clicked: ()-> Unit){
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(Unit) {
-        bitmap = Util.getAudioArtwork(context, album.id, album.id, Size(140, 140))
+        bitmap = Util.loadArtwork(context, album.artworkUri, Size(140, 140))
     }
 
     Column(modifier = modifier.clickable{ clicked() }){

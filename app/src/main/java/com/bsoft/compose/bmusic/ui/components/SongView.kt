@@ -1,9 +1,7 @@
 package com.bsoft.compose.bmusic.ui.components
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.util.Size
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
@@ -45,9 +42,8 @@ fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
     val context = LocalContext.current
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-
     LaunchedEffect(Unit) {
-        bitmap = Util.getAudioArtwork(context, song.id, song.id, Size(140, 140))
+        bitmap = Util.loadArtwork(context, song.artworkUri, Size(140, 140))
     }
 
     Column(modifier = modifier.clickable{ clicked() }){
@@ -75,7 +71,7 @@ fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
 private fun SongViewPreview(){
     BMusicTheme {
         Surface {
-            SongView(song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000, contentUri = Uri.EMPTY)){
+            SongView(song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000)){
 
             }
         }

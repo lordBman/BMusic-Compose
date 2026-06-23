@@ -46,7 +46,7 @@ fun BottomControl(modifier: Modifier = Modifier, song: Song?, playing: Boolean, 
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(song) {
-        bitmap = Util.getAudioArtwork(context, song?.id ?: 0, song?.id ?: 0, Size(140, 140))
+        bitmap = Util.loadArtwork(context, song?.artworkUri, Size(140, 140))
     }
 
     Surface(modifier = modifier.fillMaxWidth().clickable{ clicked() }, shadowElevation = 4.dp, shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)){

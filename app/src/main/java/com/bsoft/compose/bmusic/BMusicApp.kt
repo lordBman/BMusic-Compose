@@ -11,17 +11,6 @@ import com.bsoft.compose.bmusic.data.SongsState
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
 import kotlinx.coroutines.*
 
-/*fun loadMediaStoreArt(context: Context, albumId: Long) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-        //context.contentResolver.loadThumbnail(currentAlbumUri, Size(200, 200), null)
-    } else {
-        val uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI
-        val artworkUri: Uri = "content://media/external/audio/albumart".toUri()
-        val currentAlbumUri: Uri = ContentUris.withAppendedId(artworkUri, albumId)
-    }
-}*/
-
 private suspend fun <T1, T2, T3> awaitAll(
     d1: Deferred<T1>,
     d2: Deferred<T2>,

@@ -5,6 +5,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -20,12 +21,10 @@ class PlaybackService: MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = ExoPlayer.Builder(this).build()
+        val player = ExoPlayer.Builder(this).setMediaSourceFactory(DefaultMediaSourceFactory(this)).build()
         mediaLibrarySession = MediaLibrarySession.Builder(this, player, LibraryCallback()).build()
         songRepository = SongRepository(this)
     }
-
-
 
     // Remember to release the player and media session in onDestroy
     override fun onDestroy() {
