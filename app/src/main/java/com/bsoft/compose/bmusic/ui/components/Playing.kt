@@ -95,8 +95,8 @@ fun Playing(
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally){
-                Text("Name of the Songs", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
-                Text("Album: Album Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
+                Text(song?.title ?: "_________" , fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
+                Text("${song?.artist ?: "____"}: ${song?.album ?: "____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
             }
             Row(modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallFloatingActionButton(onClick = { previous() }) {
