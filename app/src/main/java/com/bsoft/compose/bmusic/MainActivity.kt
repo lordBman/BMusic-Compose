@@ -1,5 +1,7 @@
 package com.bsoft.compose.bmusic
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,22 +19,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import com.bsoft.compose.bmusic.ui.screens.HomeScreen
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
         setContent {
             BMusicTheme {
-                BMusicApp()
+                HomeScreen()
             }
         }
     }
 }
 
-@PreviewScreenSizes
+
 @Composable
 fun BMusicTestApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }

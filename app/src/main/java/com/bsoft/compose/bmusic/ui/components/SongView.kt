@@ -1,5 +1,7 @@
 package com.bsoft.compose.bmusic.ui.components
 
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,20 +25,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.data.Song
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
+import com.bsoft.compose.bmusic.utils.toTimeFormat
 
 @Composable
-fun SongView(modifier: Modifier = Modifier){
-    Column(modifier = modifier){
+fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
+    Column(modifier = modifier.clickable{ clicked() }){
         Row(modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)){
-            Surface(modifier = Modifier.size(50.dp), color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(4.dp)) {
+            Surface(modifier = Modifier.size(56.dp), color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp)) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(modifier = Modifier.size(26.dp), tint = MaterialTheme.colorScheme.primary, imageVector = ImageVector.vectorResource(R.drawable.solar__music_notes_bold_duotone), contentDescription = null)
+                    Icon(modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.tertiary, imageVector = ImageVector.vectorResource(R.drawable.solar__music_notes_bold_duotone), contentDescription = null)
                 }
             }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Top){
-                Text("Name of the Songs", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
-                Text("3:10:21 Artist Name", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)){
+                Text(song.title, fontSize = 16.sp, fontWeight = FontWeight.Light, letterSpacing = 1.2.sp, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
+                Text("${song.duration.toTimeFormat()} ${song.artist}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
             }
         }
         HorizontalDivider(thickness = 0.5.dp)
@@ -48,7 +52,9 @@ fun SongView(modifier: Modifier = Modifier){
 private fun SongViewPreview(){
     BMusicTheme {
         Surface {
-            SongView()
+            SongView(song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000, contentUri = Uri.EMPTY)){
+
+            }
         }
     }
 }

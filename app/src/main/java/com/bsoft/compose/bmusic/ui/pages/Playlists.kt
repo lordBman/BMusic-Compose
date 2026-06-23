@@ -11,7 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 @Composable
-fun PlaylistPage(modifier: Modifier = Modifier) {
+fun PlaylistsPage(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text("Playlist Screen")
     }
@@ -22,7 +22,7 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
 fun PlaylistPagePreview(){
     BMusicTheme {
         Surface {
-            PlaylistPage()
+            PlaylistsPage()
         }
     }
 }

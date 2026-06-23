@@ -15,11 +15,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.data.RepeatMode
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
-
-enum class RepeatMode{
-    Disabled, All, Single
-}
 
 @Composable
 fun RepeatToggle(modifier: Modifier = Modifier, mode: RepeatMode = RepeatMode.All, toggle: (mode: RepeatMode) -> Unit){
