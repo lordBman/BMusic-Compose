@@ -59,7 +59,7 @@ fun Playing(
     next: ()-> Unit = {}, forward: ()-> Unit = {},
     queue: ()-> Unit = {}, playToggle: ()-> Unit = {},
 ){
-    val colorStops = arrayOf( 0.0f to Color.Transparent, 0.2f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), 0.55f to MaterialTheme.colorScheme.surface)
+    val colorStops = arrayOf( 0.0f to Color.Transparent, 0.3f to MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), 0.55f to MaterialTheme.colorScheme.surface)
 
     val context = LocalContext.current
 
