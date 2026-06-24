@@ -10,7 +10,7 @@ data class Song(val id: Long, val displayName: String, val title: String, val ar
     val artworkUri: Uri
         get() = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
     fun toMediaItem(): MediaItem {
-        return MediaItem.Builder().setMediaId(id.toString())
+        return MediaItem.Builder().setMediaId(id.toString()).setUri(artworkUri)
             .setMediaMetadata(
                 MediaMetadata.Builder().setDisplayTitle(displayName).setTitle(title)
                     .setArtist(artist).setAlbumTitle(album).setDurationMs(duration)

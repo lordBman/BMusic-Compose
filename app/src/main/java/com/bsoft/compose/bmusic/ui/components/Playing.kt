@@ -2,12 +2,14 @@ package com.bsoft.compose.bmusic.ui.components
 
 import android.graphics.Bitmap
 import android.util.Size
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,9 +22,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,9 +51,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
 import com.bsoft.compose.bmusic.data.PlayingState
-import com.bsoft.compose.bmusic.data.Song
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Util
+import com.bsoft.compose.bmusic.utils.toTimeFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,11 +73,11 @@ fun Playing(
         bitmap = Util.loadArtwork(context, playingState.current?.artworkUri, Size(300, 300))
     }
 
-    Box(modifier = modifier.fillMaxWidth().height(420.dp)){
+    Box(modifier = modifier.fillMaxWidth().height(450.dp)){
         if(bitmap == null){
             Image(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), painter = painterResource(id = R.drawable.lady), contentScale = ContentScale.FillWidth, contentDescription = null)
         }else{
-            BitmapImage(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), bitmap = bitmap as Bitmap, contentScale = ContentScale.FillWidth)
+            BitmapImage(modifier = Modifier.fillMaxWidth().aspectRatio(1f).align(Alignment.TopCenter), bitmap = bitmap as Bitmap, contentScale = ContentScale.Crop)
         }
         Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = colorStops)))
         Column(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -85,7 +88,7 @@ fun Playing(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            RepeatToggle(mode = playingState.R){ repeatToggled() }
+                            RepeatToggle{ repeatToggled() }
                             ShuffleToggle { shuffleToggled() }
                         }
                     }
@@ -122,16 +125,26 @@ fun Playing(
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-                Text("00:00", fontSize = 12.sp, fontWeight = FontWeight.Light)
-                Text("00:00", fontSize = 12.sp, fontWeight = FontWeight.Light)
+                Text(playingState.position.toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
+                Text((playingState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
             }
-            Slider(modifier = Modifier.height(20.dp),
-                value = playingState.position.toFloat(), onValueChange = {},
+            Slider(value = playingState.position.toFloat(), onValueChange = {},
                 valueRange = 0f..(playingState.current?.duration?.toFloat() ?: 0f),
-                track = { sliderState -> SliderDefaults.Track(
-                    modifier = Modifier.height(6.dp),
-                    thumbTrackGapSize = 2.dp,
-                    sliderState = sliderState)
+                thumb = { state ->
+                    Surface(modifier = Modifier.size(20.dp),
+                        shadowElevation =  1.dp,
+                        border = BorderStroke( width = 2.dp,
+                            color = if(state.isDragging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface),
+                        shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+
+                    }
+                },
+                track = { state ->
+                    if(playingState.playing){
+                        LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
+                    }else{
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
+                    }
                 },
 
             )

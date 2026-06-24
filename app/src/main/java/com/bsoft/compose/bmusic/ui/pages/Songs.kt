@@ -1,6 +1,5 @@
 package com.bsoft.compose.bmusic.ui.pages
 
-import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
@@ -27,7 +26,7 @@ fun SongsPage(modifier: Modifier = Modifier, songs: List<Song> = emptyList(), ch
 @Composable
 fun SongsPagePreview(){
     val songs = (0..20).map {
-        Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000, contentUri = Uri.EMPTY)
+        Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000)
     }
 
     BMusicTheme {

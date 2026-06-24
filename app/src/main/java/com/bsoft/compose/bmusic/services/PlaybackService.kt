@@ -9,7 +9,6 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaLibraryService.MediaLibrarySession
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -21,7 +20,9 @@ class PlaybackService: MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = ExoPlayer.Builder(this).setMediaSourceFactory(DefaultMediaSourceFactory(this)).build()
+        val player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(this))
+            .build()
         mediaLibrarySession = MediaLibrarySession.Builder(this, player, LibraryCallback()).build()
         songRepository = SongRepository(this)
     }
@@ -56,7 +57,7 @@ class PlaybackService: MediaLibraryService() {
         }
 
         override fun onGetChildren(
-            session: MediaLibraryService.MediaLibrarySession, browser: MediaSession.ControllerInfo, parentId: String, page: Int, pageSize: Int, params: LibraryParams?
+            session: MediaLibrarySession, browser: MediaSession.ControllerInfo, parentId: String, page: Int, pageSize: Int, params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
 
             val items = when (parentId) {
@@ -89,14 +90,12 @@ class PlaybackService: MediaLibraryService() {
         }
 
         override fun onGetItem(
-            session: MediaLibraryService.MediaLibrarySession, browser: MediaSession.ControllerInfo, mediaId: String
+            session: MediaLibrarySession, browser: MediaSession.ControllerInfo, mediaId: String
         ): ListenableFuture<LibraryResult<MediaItem>> {
             val song = songRepository.findSongById(mediaId.toLong())
             val item = song?.toMediaItem() ?: MediaItem.EMPTY
 
-            return Futures.immediateFuture(
-                LibraryResult.ofItem(item, null)
-            )
+            return Futures.immediateFuture(LibraryResult.ofItem(item, null))
         }
 
         @OptIn(UnstableApi::class)
@@ -125,13 +124,13 @@ class PlaybackService: MediaLibraryService() {
         }
 
         override fun onSearch(
-            session: MediaLibraryService.MediaLibrarySession, browser: MediaSession.ControllerInfo, query: String, params: LibraryParams?
+            session: MediaLibrarySession, browser: MediaSession.ControllerInfo, query: String, params: LibraryParams?
         ): ListenableFuture<LibraryResult<Void>> {
             return Futures.immediateFuture(LibraryResult.ofVoid())
         }
 
         override fun onGetSearchResult(
-            session: MediaLibraryService.MediaLibrarySession, browser: MediaSession.ControllerInfo, query: String,
+            session: MediaLibrarySession, browser: MediaSession.ControllerInfo, query: String,
             page: Int,
             pageSize: Int,
             params: LibraryParams?

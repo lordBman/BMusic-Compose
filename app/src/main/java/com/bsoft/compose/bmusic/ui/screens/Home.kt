@@ -24,8 +24,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -33,6 +35,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -73,11 +76,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = viewModel()){
     val content = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val pagerState = rememberPagerState(pageCount = { HomeDestination.entries.size })
-    val coroutineScope = rememberCoroutineScope()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
     var showPlaying by remember { mutableStateOf(false) }
+    val pagerState = rememberPagerState(pageCount = { HomeDestination.entries.size })
 
     val songState by viewModel.state.collectAsStateWithLifecycle()
     val playState by playingViewModel.state.collectAsStateWithLifecycle()
@@ -89,6 +93,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
         viewModel.onStoragePermissionResult(allGranted)
         if(allGranted){
             playingViewModel.initializeMediaController(content)
+            viewModel.query()
         }
     }
 
@@ -108,8 +113,8 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
         }.all{ it }
 
         if(allGranted){
-            viewModel.query()
             playingViewModel.initializeMediaController(content)
+            viewModel.query()
         }else{
             permissionsLauncher.launch(permissions.toTypedArray())
         }
@@ -130,7 +135,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
             )
         },
         bottomBar = {
-            BottomControl(song = playState.current, playing = playState.playing, clicked = { showPlaying = true }){
+            BottomControl(state = playState, clicked = { showPlaying = true }){
                 playingViewModel.togglePlayPause()
             }
         }
@@ -172,17 +177,17 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                 }
             }
         }
+
         if(showPlaying){
             ModalBottomSheet(
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                sheetState = sheetState,
                 onDismissRequest = { showPlaying = false },
                 dragHandle = null) {
-                Playing(song = playState.current, playing = playState.playing,
+                Playing(playingState = playState,
                     next = { playingViewModel.next() },
-                    previous = { playingViewModel.previous() }
-                ){
-                    playingViewModel.togglePlayPause()
-                }
+                    previous = { playingViewModel.previous() },
+                    playToggled = { playingViewModel.togglePlayPause() }
+                )
             }
         }
     }
