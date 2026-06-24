@@ -2,6 +2,8 @@ package com.bsoft.compose.bmusic.viewmodels
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -9,7 +11,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bsoft.compose.bmusic.data.Album
 import com.bsoft.compose.bmusic.data.PlayingState
 import com.bsoft.compose.bmusic.data.Song
 import com.bsoft.compose.bmusic.services.PlaybackService
@@ -24,8 +25,21 @@ class PlayingViewModel: ViewModel() {
 
     private var mediaBrowser: MediaBrowser? = null
 
-    val playerListener = object : Player.Listener {
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateProgressRunnable = object : Runnable {
+        override fun run() {
+            mediaBrowser?.let { player ->
+                if (player.isPlaying) {
+                    mutableState.update { it.copy(position = player.currentPosition, playing = player.isPlaying) }
 
+                    // Poll again in 1000ms (or 16ms for smooth 60fps video trackers)
+                    handler.postDelayed(this, 1000)
+                }
+            }
+        }
+    }
+
+    val playerListener = object : Player.Listener {
         // Triggered when the player starts buffering, becomes ready, or ends
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
@@ -39,6 +53,11 @@ class PlayingViewModel: ViewModel() {
         // Triggered when play/pause changes
         override fun onIsPlayingChanged(playing: Boolean) {
             mutableState.update { it.copy(playing = playing) }
+            if (playing) {
+                handler.post(updateProgressRunnable)
+            } else {
+                handler.removeCallbacks(updateProgressRunnable)
+            }
         }
 
         // Triggered when a critical playback error occurs
@@ -61,18 +80,17 @@ class PlayingViewModel: ViewModel() {
         if (mediaBrowser == null) {
             val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
             val controllerFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
+            val item = MediaItem.Builder().setMediaId("songs")
+                .setMediaMetadata(
+                    MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
+                ).build()
             controllerFuture.addListener({
                 mediaBrowser = controllerFuture.get()
                 mediaBrowser?.addListener(playerListener)
+                mediaBrowser?.setMediaItem(item)
+                mediaBrowser?.seekToDefaultPosition(0)
+                mediaBrowser?.prepare()
             }, MoreExecutors.directExecutor())
-        }
-    }
-
-    fun playMedia(song: Song) {
-        mediaBrowser?.apply {
-            setMediaItem(song.toMediaItem())
-            prepare()
-            play()
         }
     }
 

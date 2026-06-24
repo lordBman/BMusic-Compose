@@ -2,12 +2,14 @@ package com.bsoft.compose.bmusic.ui.components
 
 import android.graphics.Bitmap
 import android.util.Size
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,9 +22,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,56 +50,58 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.data.PlayingState
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Util
+import com.bsoft.compose.bmusic.utils.toTimeFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Playing(
-    modifier: Modifier = Modifier, song: Song?, playing: Boolean,
+    modifier: Modifier = Modifier, playingState: PlayingState,
     previous: ()-> Unit = {}, rewind: ()-> Unit = {},
     next: ()-> Unit = {}, forward: ()-> Unit = {},
-    queue: ()-> Unit = {}, playToggle: ()-> Unit = {},
+    queue: ()-> Unit = {}, playToggled: ()-> Unit = {},
+    repeatToggled: ()-> Unit = {}, shuffleToggled: ()-> Unit = {},
+    favouriteToggled: ()-> Unit = {},
 ){
     val colorStops = arrayOf( 0.0f to Color.Transparent, 0.3f to MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), 0.55f to MaterialTheme.colorScheme.surface)
-
     val context = LocalContext.current
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(song) {
-        bitmap = Util.getAudioArtwork(context, song?.id ?: 0, song?.id ?: 0, Size(300, 300))
+    LaunchedEffect(playingState.current) {
+        bitmap = Util.loadArtwork(context, playingState.current?.artworkUri, Size(300, 300))
     }
 
-    Box(modifier = modifier.fillMaxWidth().height(420.dp)){
+    Box(modifier = modifier.fillMaxWidth().height(450.dp)){
         if(bitmap == null){
             Image(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), painter = painterResource(id = R.drawable.lady), contentScale = ContentScale.FillWidth, contentDescription = null)
         }else{
-            BitmapImage(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter), bitmap = bitmap as Bitmap, contentScale = ContentScale.FillWidth)
+            BitmapImage(modifier = Modifier.fillMaxWidth().aspectRatio(1f).align(Alignment.TopCenter), bitmap = bitmap as Bitmap, contentScale = ContentScale.Crop)
         }
         Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = colorStops)))
         Column(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
-                    FavouriteToggle { }
+                    FavouriteToggle { favouriteToggled() }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            RepeatToggle{ }
-                            ShuffleToggle { }
+                            RepeatToggle{ repeatToggled() }
+                            ShuffleToggle { shuffleToggled() }
                         }
                     }
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
-                        IconButton(onClick = {},  colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary)) {
+                        IconButton(onClick = { queue() },  colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary)) {
                             Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__music_note_2_play_20_regular), contentDescription = null)
                         }
                     }
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally){
-                Text(song?.title ?: "_________" , fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
-                Text("${song?.artist ?: "____"}: ${song?.album ?: "____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
+                Text(playingState.current?.title ?: "_________" , fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
+                Text("${playingState.current?.artist ?: "____"}: ${playingState.current?.album ?: "____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
             }
             Row(modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallFloatingActionButton(onClick = { previous() }) {
@@ -105,8 +110,8 @@ fun Playing(
                 SmallFloatingActionButton(onClick = { rewind() }) {
                     Icon(modifier = Modifier.size(18.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__rewind_24_filled), contentDescription = null)
                 }
-                FloatingActionButton (onClick = {playToggle()}, shape = CircleShape, modifier = Modifier.size(80.dp)) {
-                    if(playing){
+                FloatingActionButton (onClick = {playToggled()}, shape = CircleShape, modifier = Modifier.size(80.dp)) {
+                    if(playingState.playing){
                         Icon(modifier = Modifier.size(40.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__pause_24_filled), contentDescription = null)
                     }else{
                         Icon(modifier = Modifier.size(40.dp), imageVector = ImageVector.vectorResource( R.drawable.fluent__play_24_filled), contentDescription = null)
@@ -120,16 +125,26 @@ fun Playing(
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-                Text("00:00", fontSize = 12.sp, fontWeight = FontWeight.Light)
-                Text("00:00", fontSize = 12.sp, fontWeight = FontWeight.Light)
+                Text(playingState.position.toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
+                Text((playingState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
             }
-            Slider(modifier = Modifier.height(20.dp),
-                value = 20f, onValueChange = {},
-                valueRange = 0f..50f,
-                track = { sliderState -> SliderDefaults.Track(
-                    modifier = Modifier.height(6.dp),
-                    thumbTrackGapSize = 2.dp,
-                    sliderState = sliderState)
+            Slider(value = playingState.position.toFloat(), onValueChange = {},
+                valueRange = 0f..(playingState.current?.duration?.toFloat() ?: 0f),
+                thumb = { state ->
+                    Surface(modifier = Modifier.size(20.dp),
+                        shadowElevation =  1.dp,
+                        border = BorderStroke( width = 2.dp,
+                            color = if(state.isDragging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface),
+                        shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+
+                    }
+                },
+                track = { state ->
+                    if(playingState.playing){
+                        LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
+                    }else{
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
+                    }
                 },
 
             )
@@ -141,6 +156,6 @@ fun Playing(
 @Composable
 private fun PlayingPreview(){
     BMusicTheme {
-        Playing(song = null, playing = false)
+        Playing(playingState = PlayingState())
     }
 }

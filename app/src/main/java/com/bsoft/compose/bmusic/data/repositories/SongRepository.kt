@@ -101,8 +101,8 @@ class SongRepository(private val context: Context) {
                     val artist = cursor.getString(artistColumn) ?: "Unknown Artist"
                     val album = cursor.getString(albumColumn) ?: "Unknown Album"
                     val duration = cursor.getLong(durationColumn)
-                    val contentURI = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
-                    add(Song(id = id, displayName = displayName, title = title, artist = artist, album = album, contentUri = contentURI, duration = duration))
+                    //val contentURI = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+                    add(Song(id = id, displayName = displayName, title = title, artist = artist, album = album, duration = duration))
                 }
             }
         } ?: emptyList()

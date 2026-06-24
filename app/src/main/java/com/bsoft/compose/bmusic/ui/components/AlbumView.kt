@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +43,7 @@ fun AlbumView(modifier: Modifier = Modifier, album: Album, clicked: ()-> Unit){
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(Unit) {
-        bitmap = Util.getAudioArtwork(context, album.id, album.id, Size(140, 140))
+        bitmap = Util.loadArtwork(context, album.artworkUri, Size(140, 140))
     }
 
     Column(modifier = modifier.clickable{ clicked() }){
@@ -53,7 +54,7 @@ fun AlbumView(modifier: Modifier = Modifier, album: Album, clicked: ()-> Unit){
                         Icon(modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.tertiary, imageVector = ImageVector.vectorResource(R.drawable.pinhead__vinyl_record), contentDescription = null)
                     }
                 }else{
-                    BitmapImage(bitmap = bitmap as Bitmap)
+                    BitmapImage(bitmap = bitmap as Bitmap,  contentScale = ContentScale.Crop)
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)){
