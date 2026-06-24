@@ -130,6 +130,13 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
+    fun forward(){
+        mediaBrowser?.let{
+            it.seekForward()
+            it.seekTo(it.currentPosition + 20000)
+        }
+    }
+
     fun previous() {
         mediaBrowser?.let {
             if(it.hasPreviousMediaItem()){
@@ -138,9 +145,19 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
+    fun rewind(){
+        mediaBrowser?.let{
+            it.seekForward()
+            it.seekTo(it.currentPosition - 20000)
+        }
+    }
+
+    fun seek(position: Long){
+        mediaBrowser?.seekTo(position)
+    }
+
     override fun onCleared() {
         mediaBrowser?.release()
         mediaBrowser = null
-        super.onCleared()
     }
 }

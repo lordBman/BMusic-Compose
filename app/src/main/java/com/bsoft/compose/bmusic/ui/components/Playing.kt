@@ -63,7 +63,7 @@ fun Playing(
     next: ()-> Unit = {}, forward: ()-> Unit = {},
     queue: ()-> Unit = {}, playToggled: ()-> Unit = {},
     repeatToggled: ()-> Unit = {}, shuffleToggled: ()-> Unit = {},
-    favouriteToggled: ()-> Unit = {},
+    favouriteToggled: ()-> Unit = {}, seek: (Long)-> Unit = {}
 ){
     val colorStops = arrayOf( 0.0f to Color.Transparent, 0.3f to MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), 0.55f to MaterialTheme.colorScheme.surface)
     val context = LocalContext.current
@@ -128,7 +128,7 @@ fun Playing(
                 Text(playingState.position.toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
                 Text((playingState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
             }
-            Slider(value = playingState.position.toFloat(), onValueChange = {},
+            Slider(value = playingState.position.toFloat(), onValueChange = { seek(it.toLong()) },
                 valueRange = 0f..(playingState.current?.duration?.toFloat() ?: 0f),
                 thumb = { state ->
                     Surface(modifier = Modifier.size(20.dp),
@@ -136,7 +136,6 @@ fun Playing(
                         border = BorderStroke( width = 2.dp,
                             color = if(state.isDragging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface),
                         shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
-
                     }
                 },
                 track = { state ->

@@ -186,7 +186,10 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                 Playing(playingState = playState,
                     next = { playingViewModel.next() },
                     previous = { playingViewModel.previous() },
-                    playToggled = { playingViewModel.togglePlayPause() }
+                    playToggled = { playingViewModel.togglePlayPause() },
+                    forward = { playingViewModel.forward() },
+                    rewind = { playingViewModel.rewind() },
+                    seek = { playingViewModel.seek(it) }
                 )
             }
         }
