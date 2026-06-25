@@ -42,7 +42,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.data.Album
 import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.ui.components.AlbumLargeView
 import com.bsoft.compose.bmusic.ui.components.ImageBackgroundTopAppBar
 import com.bsoft.compose.bmusic.ui.components.SongView
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
@@ -78,17 +80,7 @@ fun ArtistScreen(modifier: Modifier = Modifier, back: ()-> Unit){
                     if(index == 0){
                         LazyRow(contentPadding = PaddingValues(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)){
                             items(3){
-                                Surface(modifier = Modifier.width(250.dp), shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest, shadowElevation = 4.dp) {
-                                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)){
-                                        Surface(modifier = Modifier.size(250.dp, 120.dp), shape = RoundedCornerShape(10.dp)) {
-                                            Image(modifier = Modifier.fillParentMaxSize(), bitmap = ImageBitmap.imageResource(R.drawable.album_bg), contentScale = ContentScale.Crop, contentDescription = "")
-                                        }
-                                        Column(modifier = Modifier.padding(8.dp)) {
-                                            Text("Album Name", fontSize = 16.sp, fontWeight = FontWeight.Light, letterSpacing = 1.2.sp, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
-                                            Text("12 Songs", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
-                                        }
-                                    }
-                                }
+                                AlbumLargeView(album = Album(id = 0, name = "Album Title", artist = "", songCount = 12 ))
                             }
                         }
                     }else{
