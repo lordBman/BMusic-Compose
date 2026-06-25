@@ -70,7 +70,7 @@ fun Playing(
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(playingState.current) {
-        bitmap = Util.loadArtwork(context, playingState.current?.artworkUri, Size(300, 300))
+        bitmap = Util.loadArtwork(context, playingState.current?.artworkUri, Size(400, 400))
     }
 
     Box(modifier = modifier.fillMaxWidth().height(450.dp)){
@@ -128,25 +128,9 @@ fun Playing(
                 Text(playingState.position.toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
                 Text((playingState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
             }
-            Slider(value = playingState.position.toFloat(), onValueChange = { seek(it.toLong()) },
-                valueRange = 0f..(playingState.current?.duration?.toFloat() ?: 0f),
-                thumb = { state ->
-                    Surface(modifier = Modifier.size(20.dp),
-                        shadowElevation =  1.dp,
-                        border = BorderStroke( width = 2.dp,
-                            color = if(state.isDragging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface),
-                        shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
-                    }
-                },
-                track = { state ->
-                    if(playingState.playing){
-                        LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
-                    }else{
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = { state.value / state.valueRange.endInclusive })
-                    }
-                },
-
-            )
+            Seeker(playingState = playingState) {
+                seek(it)
+            }
         }
     }
 }

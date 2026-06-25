@@ -1,18 +1,20 @@
 package com.bsoft.compose.bmusic.ui.pages
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.ui.components.Search
 import com.bsoft.compose.bmusic.ui.components.SongView
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 @Composable
 fun SongsPage(modifier: Modifier = Modifier, songs: List<Song> = emptyList(), chosen: (index: Int, song: Song)-> Unit) {
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(songs.size) { index ->
             val song = songs[index]
             SongView(song = song){
