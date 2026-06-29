@@ -6,8 +6,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.bsoft.compose.bmusic.data.Artist
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.data.models.Artist
 import com.bsoft.compose.bmusic.ui.components.ArtistView
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 

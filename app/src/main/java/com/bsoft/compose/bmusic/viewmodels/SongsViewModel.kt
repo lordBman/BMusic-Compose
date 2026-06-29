@@ -8,15 +8,18 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import com.bsoft.compose.bmusic.BMusicApp
-import com.bsoft.compose.bmusic.data.SongsState
+import com.bsoft.compose.bmusic.data.states.SongsState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SongsViewModel(application: Application): AndroidViewModel(application) {
+@HiltViewModel
+class SongsViewModel @Inject constructor(application: Application): AndroidViewModel(application) {
     private val app = application.applicationContext as BMusicApp
 
     val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -54,7 +57,6 @@ class SongsViewModel(application: Application): AndroidViewModel(application) {
     }
 
     override fun onCleared() {
-        super.onCleared()
         app.contentResolver.unregisterContentObserver(observer)
     }
 }

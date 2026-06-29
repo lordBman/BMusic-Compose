@@ -2,15 +2,13 @@ package com.bsoft.compose.bmusic.data.repositories
 
 import android.content.ContentUris
 import android.content.Context
-import android.content.res.Resources
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
-import com.bsoft.compose.bmusic.data.Album
-import com.bsoft.compose.bmusic.data.Artist
-import com.bsoft.compose.bmusic.data.Song
 import androidx.core.net.toUri
+import com.bsoft.compose.bmusic.data.models.Album
+import com.bsoft.compose.bmusic.data.models.Artist
+import com.bsoft.compose.bmusic.data.models.Song
 
 class SongRepository(private val context: Context) {
     val songs by lazy { return@lazy fetchSongs() }

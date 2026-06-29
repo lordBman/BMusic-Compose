@@ -25,8 +25,8 @@ sealed interface Route: NavKey {
     data object Playlist: Route
 
     @Serializable
-    data object Album: Route
+    data class Album(val id: Long): Route
 
     @Serializable
-    data object Artist: Route
+    data class Artist(val id: Long): Route
 }

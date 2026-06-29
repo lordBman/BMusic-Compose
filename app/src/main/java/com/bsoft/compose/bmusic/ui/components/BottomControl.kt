@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.PlayingState
+import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.utils.Util
 
 @OptIn(ExperimentalMaterial3Api::class)

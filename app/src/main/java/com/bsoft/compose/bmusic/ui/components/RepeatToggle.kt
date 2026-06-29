@@ -15,28 +15,28 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.RepeatMode
+import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 @Composable
-fun RepeatToggle(modifier: Modifier = Modifier, mode: RepeatMode = RepeatMode.All, toggle: (mode: RepeatMode) -> Unit){
+fun RepeatToggle(modifier: Modifier = Modifier, mode: PlayingState.RepeatMode = PlayingState.RepeatMode.All, toggle: (mode: PlayingState.RepeatMode) -> Unit){
     IconButton(modifier = modifier, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary),
         onClick = {
             when(mode){
-                RepeatMode.Disabled -> toggle(RepeatMode.All)
-                RepeatMode.All -> toggle(RepeatMode.Single)
-                RepeatMode.Single -> toggle(RepeatMode.Disabled)
+                PlayingState.RepeatMode.Disabled -> toggle(PlayingState.RepeatMode.All)
+                PlayingState.RepeatMode.All -> toggle(PlayingState.RepeatMode.Single)
+                PlayingState.RepeatMode.Single -> toggle(PlayingState.RepeatMode.Disabled)
             }
         },
         content = {
             when(mode){
-                RepeatMode.Disabled -> {
+                PlayingState.RepeatMode.Disabled -> {
                     Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__arrow_repeat_all_off_24_regular), contentDescription = null)
                 }
-                RepeatMode.All -> {
+                PlayingState.RepeatMode.All -> {
                     Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__arrow_repeat_all_24_regular), contentDescription = null)
                 }
-                RepeatMode.Single -> {
+                PlayingState.RepeatMode.Single -> {
                     Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__arrow_repeat_1_24_regular), contentDescription = null)
                 }
             }
@@ -46,7 +46,7 @@ fun RepeatToggle(modifier: Modifier = Modifier, mode: RepeatMode = RepeatMode.Al
 @Preview
 @Composable
 private fun RepeatTogglePreview(){
-    var mode by remember { mutableStateOf(RepeatMode.All) }
+    var mode by remember { mutableStateOf(PlayingState.RepeatMode.All) }
     
     BMusicTheme {
         Surface {

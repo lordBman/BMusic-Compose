@@ -1,14 +1,10 @@
 package com.bsoft.compose.bmusic
 
 import android.app.Application
-import android.content.ContentUris
-import android.os.Build
-import android.provider.MediaStore
-import com.bsoft.compose.bmusic.data.Album
-import com.bsoft.compose.bmusic.data.Artist
-import com.bsoft.compose.bmusic.data.Song
-import com.bsoft.compose.bmusic.data.SongsState
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
+import com.bsoft.compose.bmusic.data.repositories.UserDataRepository
+import com.bsoft.compose.bmusic.data.states.SongsState
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.*
 
 private suspend fun <T1, T2, T3> awaitAll(
@@ -17,8 +13,10 @@ private suspend fun <T1, T2, T3> awaitAll(
     d3: Deferred<T3>
 ): Triple<T1, T2, T3> = Triple(d1.await(), d2.await(), d3.await())
 
+@HiltAndroidApp
 class BMusicApp: Application() {
     val songRepository = SongRepository(this)
+    val userDataRepository = UserDataRepository(this)
 
     suspend fun loadSongsState(): SongsState = coroutineScope {
         val songsDeferred =  async { songRepository.songs }

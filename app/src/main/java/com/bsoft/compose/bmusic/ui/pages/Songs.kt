@@ -7,18 +7,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.data.models.Song
 import com.bsoft.compose.bmusic.ui.components.Search
 import com.bsoft.compose.bmusic.ui.components.SongView
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 @Composable
-fun SongsPage(modifier: Modifier = Modifier, songs: List<Song> = emptyList(), chosen: (index: Int, song: Song)-> Unit) {
+fun SongsPage(modifier: Modifier = Modifier, songs: List<Song> = emptyList(), chosen: (index: Int)-> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(songs.size) { index ->
             val song = songs[index]
             SongView(song = song){
-                chosen(index,song)
+                chosen(index)
             }
         }
     }
@@ -33,7 +33,7 @@ fun SongsPagePreview(){
 
     BMusicTheme {
         Surface {
-            SongsPage(songs = songs){ index, song ->  }
+            SongsPage(songs = songs){}
         }
     }
 }

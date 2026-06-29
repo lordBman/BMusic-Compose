@@ -2,7 +2,6 @@ package com.bsoft.compose.bmusic.ui.components
 
 import android.graphics.Bitmap
 import android.util.Size
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,10 +21,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,7 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.PlayingState
+import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Util
 import com.bsoft.compose.bmusic.utils.toTimeFormat
@@ -88,8 +84,8 @@ fun Playing(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            RepeatToggle{ repeatToggled() }
-                            ShuffleToggle { shuffleToggled() }
+                            RepeatToggle(mode = playingState.repeatMode){ repeatToggled() }
+                            ShuffleToggle(active = playingState.shuffle) { shuffleToggled() }
                         }
                     }
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {

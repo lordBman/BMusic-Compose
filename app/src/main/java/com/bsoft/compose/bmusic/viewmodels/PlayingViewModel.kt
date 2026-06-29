@@ -1,25 +1,33 @@
 package com.bsoft.compose.bmusic.viewmodels
 
+import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bsoft.compose.bmusic.data.PlayingState
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.BMusicApp
+import com.bsoft.compose.bmusic.data.models.Song
+import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.services.PlaybackService
 import com.google.common.util.concurrent.MoreExecutors
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class PlayingViewModel: ViewModel() {
+@HiltViewModel
+class PlayingViewModel(application: Application): AndroidViewModel(application) {
+    private val app = application.applicationContext as BMusicApp
+
     private val mutableState = MutableStateFlow(PlayingState())
     val state = mutableState.asStateFlow()
 
@@ -74,6 +82,20 @@ class PlayingViewModel: ViewModel() {
                 }
             }
         }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            super.onRepeatModeChanged(repeatMode)
+            when(repeatMode){
+                Player.REPEAT_MODE_ALL -> mutableState.update { it.copy(repeatMode = PlayingState.RepeatMode.All) }
+                Player.REPEAT_MODE_ONE -> mutableState.update { it.copy(repeatMode = PlayingState.RepeatMode.Single) }
+                Player.REPEAT_MODE_OFF -> mutableState.update { it.copy(repeatMode = PlayingState.RepeatMode.Disabled) }
+            }
+        }
+
+        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+            super.onShuffleModeEnabledChanged(shuffleModeEnabled)
+            mutableState.update { it.copy(shuffle = shuffleModeEnabled) }
+        }
     }
 
     fun initializeMediaController(context: Context) {
@@ -108,9 +130,10 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
-    fun playLibrary(mediaItem: MediaItem){
+    fun playLibrary(mediaItem: MediaItem, index: Int = 0){
         mediaBrowser?.apply {
             setMediaItem(mediaItem)
+            seekToDefaultPosition(index)
             prepare()
             play()
         }
@@ -154,6 +177,32 @@ class PlayingViewModel: ViewModel() {
 
     fun seek(position: Long){
         mediaBrowser?.seekTo(position)
+    }
+
+    fun toggleRepeat(){
+        mediaBrowser?.let { player ->
+            if(player.availableCommands.contains(Player.COMMAND_SET_REPEAT_MODE)){
+                when(player.repeatMode){
+                    Player.REPEAT_MODE_ALL -> {
+                        player.repeatMode = Player.REPEAT_MODE_ONE
+                    }
+                    Player.REPEAT_MODE_ONE -> {
+                        player.repeatMode = Player.REPEAT_MODE_OFF
+                    }
+                    Player.REPEAT_MODE_OFF -> {
+                        player.repeatMode = Player.REPEAT_MODE_ALL
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleShuffle(){
+        mediaBrowser?.let { player ->
+            if(player.availableCommands.contains(Player.COMMAND_SET_REPEAT_MODE)){
+                player.shuffleModeEnabled = !player.shuffleModeEnabled
+            }
+        }
     }
 
     override fun onCleared() {

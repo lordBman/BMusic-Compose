@@ -1,10 +1,20 @@
 package com.bsoft.compose.bmusic.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -27,6 +37,43 @@ import kotlin.collections.listOf
 fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = viewModel()){
     val rootBackStack = remember { mutableStateListOf<Route>(Route.Home) }
 
+    val content = LocalContext.current
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()) { resultMap ->
+
+        val allGranted = resultMap.values.all{ it }
+        viewModel.onStoragePermissionResult(allGranted)
+        if(allGranted){
+            playingViewModel.initializeMediaController(content)
+            viewModel.query()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mutableListOf(Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.FOREGROUND_SERVICE)
+        } else {
+            mutableListOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE){
+            permissions.add(Manifest.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK)
+        }
+
+        val allGranted = permissions.map {
+            ContextCompat.checkSelfPermission(content, it) == PackageManager.PERMISSION_GRANTED
+        }.all{ it }
+
+        if(allGranted){
+            playingViewModel.initializeMediaController(content)
+            viewModel.query()
+        }else{
+            permissionsLauncher.launch(permissions.toTypedArray())
+        }
+    }
+
+    val songState by viewModel.state.collectAsStateWithLifecycle()
+
     NavDisplay(
         backStack = rootBackStack,
         onBack = { rootBackStack.removeLastOrNull() },
@@ -42,15 +89,20 @@ fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(),
                 HomeScreen(
                     modifier = modifier, viewModel = viewModel, playingViewModel = playingViewModel,
                     toScreen = { rootBackStack.add(it) },
-                    toAlbum = { rootBackStack.add(Route.Album) },
-                    toArtist = { rootBackStack.add(Route.Artist) }
+                    toAlbum = { rootBackStack.add(Route.Album(it.id)) },
+                    toArtist = { rootBackStack.add(Route.Artist(it.id)) }
                 )
             }
-            entry<Route.Album>{
-                AlbumScreen(modifier = modifier, back = { rootBackStack.removeLastOrNull() })
+            entry<Route.Album>{ it ->
+                AlbumScreen(modifier = modifier, id = it.id, state = songState,
+                    play = {  album, index -> playingViewModel.playLibrary(album.toMediaItem(), index) },
+                    back = { rootBackStack.removeLastOrNull() })
             }
             entry<Route.Artist>{
-                ArtistScreen(modifier = modifier, back = { rootBackStack.removeLastOrNull() })
+                ArtistScreen(modifier = modifier, id = it.id, state = songState,
+                    toAlbum = {album -> rootBackStack.add(Route.Album(album.id)) },
+                    play = { artist, index -> playingViewModel.playLibrary(artist.toMediaItem(), index) },
+                    back = { rootBackStack.removeLastOrNull() })
             }
             entry<Route.Search>{
                 SearchScreen(modifier = modifier, viewModel = viewModel)
