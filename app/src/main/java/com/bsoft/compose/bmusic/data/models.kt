@@ -27,7 +27,6 @@ data class Song(val id: Long, val displayName: String, val title: String, val ar
             val artist = mediaItem.mediaMetadata.artist?.toString() ?: "Unknown Artist"
             val album = mediaItem.mediaMetadata.albumTitle?.toString() ?: "Unknown Album"
             val duration = mediaItem.mediaMetadata.durationMs ?: 0
-            //val artworkUri = mediaItem.mediaMetadata.artworkUri
 
             return Song(id, displayName, title, artist, album, duration)
         }
@@ -46,6 +45,9 @@ data class Album(val id: Long, val name: String, val artist: String, val songCou
 }
 
 data class Artist(val id: Long, val name: String, val albumCount: Int, val songCount: Int){
+    val artworkUri: Uri
+        get() = ContentUris.withAppendedId(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, id)
+
     fun toMediaItem(): MediaItem {
         return MediaItem.Builder().setMediaId("artist_${id}")
             .setMediaMetadata(

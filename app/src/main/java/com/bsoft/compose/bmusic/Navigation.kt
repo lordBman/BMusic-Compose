@@ -23,4 +23,10 @@ sealed interface Route: NavKey {
 
     @Serializable
     data object Playlist: Route
+
+    @Serializable
+    data object Album: Route
+
+    @Serializable
+    data object Artist: Route
 }

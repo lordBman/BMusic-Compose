@@ -33,7 +33,7 @@ class PlayingViewModel: ViewModel() {
                     mutableState.update { it.copy(position = player.currentPosition, playing = player.isPlaying) }
 
                     // Poll again in 1000ms (or 16ms for smooth 60fps video trackers)
-                    handler.postDelayed(this, 1000)
+                    handler.postDelayed(this, 200)
                 }
             }
         }
@@ -130,6 +130,13 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
+    fun forward(){
+        mediaBrowser?.let{
+            it.seekForward()
+            it.seekTo(it.currentPosition + 10000)
+        }
+    }
+
     fun previous() {
         mediaBrowser?.let {
             if(it.hasPreviousMediaItem()){
@@ -138,9 +145,19 @@ class PlayingViewModel: ViewModel() {
         }
     }
 
+    fun rewind(){
+        mediaBrowser?.let{
+            it.seekForward()
+            it.seekTo(it.currentPosition - 10000)
+        }
+    }
+
+    fun seek(position: Long){
+        mediaBrowser?.seekTo(position)
+    }
+
     override fun onCleared() {
         mediaBrowser?.release()
         mediaBrowser = null
-        super.onCleared()
     }
 }

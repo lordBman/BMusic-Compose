@@ -61,6 +61,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bsoft.compose.bmusic.HomeDestination
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.Route
+import com.bsoft.compose.bmusic.data.Album
+import com.bsoft.compose.bmusic.data.Artist
 import com.bsoft.compose.bmusic.ui.components.BottomControl
 import com.bsoft.compose.bmusic.ui.components.Playing
 import com.bsoft.compose.bmusic.ui.pages.AlbumPage
@@ -74,11 +77,14 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = viewModel()){
+fun HomeScreen(
+    modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = viewModel(),
+    toScreen: (Route)-> Unit, toAlbum: (Album)-> Unit, toArtist: (Artist)-> Unit
+){
     val content = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
     var showPlaying by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(pageCount = { HomeDestination.entries.size })
@@ -128,8 +134,12 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                     Text(text = "BMusic")
                 },
                 actions = {
-                    Icon(modifier = Modifier.size(28.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__search_24_filled), contentDescription = null)
-                    Icon(modifier = Modifier.size(28.dp), imageVector = ImageVector.vectorResource(R.drawable.glyphs__cog_bold), contentDescription = null)
+                    IconButton(onClick = { toScreen(Route.Search) }) {
+                        Icon(modifier = Modifier.size(28.dp), imageVector = ImageVector.vectorResource(R.drawable.fluent__search_24_filled), contentDescription = null)
+                    }
+                    IconButton(onClick = { toScreen(Route.Settings) }) {
+                        Icon(modifier = Modifier.size(28.dp), imageVector = ImageVector.vectorResource(R.drawable.glyphs__cog_bold), contentDescription = null)
+                    }
                 },
                 scrollBehavior = scrollBehavior
             )
@@ -164,14 +174,16 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
             })
             HorizontalPager(modifier = modifier.fillMaxWidth().weight(1f), state = pagerState) { page ->
                 when (page) {
-                    0 -> SongsPage(songs = songState.songs){ index, song ->
+                    0 -> SongsPage(modifier = Modifier.fillMaxSize(), songs = songState.songs){ index, song ->
                         playingViewModel.playSong(index = index)
                     }
                     1 -> AlbumPage(albums = songState.albums){
-                        playingViewModel.playLibrary(it.toMediaItem())
+                        //playingViewModel.playLibrary(it.toMediaItem())
+                        toAlbum(songState.albums.first())
                     }
                     2 -> ArtistsPage(artists = songState.artists){
-                        playingViewModel.playLibrary(it.toMediaItem())
+                        //playingViewModel.playLibrary(it.toMediaItem())
+                        toArtist(songState.artists.first())
                     }
                     3 -> PlaylistsPage()
                 }
@@ -186,7 +198,10 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
                 Playing(playingState = playState,
                     next = { playingViewModel.next() },
                     previous = { playingViewModel.previous() },
-                    playToggled = { playingViewModel.togglePlayPause() }
+                    playToggled = { playingViewModel.togglePlayPause() },
+                    forward = { playingViewModel.forward() },
+                    rewind = { playingViewModel.rewind() },
+                    seek = { playingViewModel.seek(it) }
                 )
             }
         }
@@ -197,6 +212,6 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewMo
 @Composable
 private fun HomeScreenPreview(){
     BMusicTheme {
-        HomeScreen()
+        HomeScreen(toScreen = {}, toAlbum = {}, toArtist = {})
     }
 }
