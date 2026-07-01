@@ -9,22 +9,31 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import com.bsoft.compose.bmusic.data.QueueManager
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PlaybackService: MediaLibraryService() {
     private lateinit var mediaLibrarySession: MediaLibrarySession
-    private lateinit var songRepository: SongRepository
+
+    @Inject
+    lateinit var songRepository: SongRepository
+
+    @Inject
+    lateinit var queueManager: QueueManager
 
     override fun onCreate() {
         super.onCreate()
+
         val player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(DefaultMediaSourceFactory(this))
             .build()
         mediaLibrarySession = MediaLibrarySession.Builder(this, player, LibraryCallback()).build()
-        songRepository = SongRepository(this)
     }
 
     // Remember to release the player and media session in onDestroy
@@ -36,7 +45,7 @@ class PlaybackService: MediaLibraryService() {
         super.onDestroy()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
         return mediaLibrarySession
     }
 

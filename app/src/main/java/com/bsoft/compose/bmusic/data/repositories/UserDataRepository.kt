@@ -5,9 +5,14 @@ import androidx.room.Room
 import com.bsoft.compose.bmusic.data.UserDataDatabase
 import com.bsoft.compose.bmusic.data.entities.Favourite
 import com.bsoft.compose.bmusic.data.entities.PlayCounter
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
 import kotlin.getValue
 
-class UserDataRepository(private val context: Context) {
+@Singleton
+class UserDataRepository  @Inject constructor(@ApplicationContext private val context: Context) {
     val userDataDB: UserDataDatabase by lazy {
         return@lazy Room.databaseBuilder(context = context, UserDataDatabase::class.java, "user-database")
             //.enableMultiInstanceInvalidation()
@@ -28,6 +33,4 @@ class UserDataRepository(private val context: Context) {
 
         return userDao.getAll()
     }
-
-
 }

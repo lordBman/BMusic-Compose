@@ -1,20 +1,17 @@
 package com.bsoft.compose.bmusic.viewmodels
 
-import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Tracks
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bsoft.compose.bmusic.BMusicApp
+import com.bsoft.compose.bmusic.data.QueueManager
 import com.bsoft.compose.bmusic.data.models.Song
 import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.services.PlaybackService
@@ -23,10 +20,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 @HiltViewModel
-class PlayingViewModel(application: Application): AndroidViewModel(application) {
-    private val app = application.applicationContext as BMusicApp
+class PlayingViewModel @Inject constructor(private val queueManager: QueueManager) : ViewModel() {
 
     private val mutableState = MutableStateFlow(PlayingState())
     val state = mutableState.asStateFlow()

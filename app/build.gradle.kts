@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.androidx.media3.session)
 
     implementation(libs.dagger.hilt.android)
+    implementation(libs.hilt.lifecycle.viewmodel)
+    implementation(libs.error.prone.annotations)
 
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)

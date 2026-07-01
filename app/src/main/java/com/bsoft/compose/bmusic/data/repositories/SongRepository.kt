@@ -1,11 +1,9 @@
 package com.bsoft.compose.bmusic.data.repositories
 
-import android.content.ContentUris
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
-import androidx.core.net.toUri
 import com.bsoft.compose.bmusic.data.models.Album
 import com.bsoft.compose.bmusic.data.models.Artist
 import com.bsoft.compose.bmusic.data.models.Song
@@ -34,11 +32,6 @@ class SongRepository(private val context: Context) {
                     val name = it.getString(nameCol) ?: ""
                     val artist = it.getString(artistCol) ?: ""
                     val songCount = it.getInt(countCol)
-                    // Reconstruct the explicit Content Uri for the album art
-                    val artworkUri = ContentUris.withAppendedId(
-                        "content://media/external/audio/albumart".toUri(),
-                        id
-                    )
                     add(Album(id, name, artist, songCount))
                 }
             }

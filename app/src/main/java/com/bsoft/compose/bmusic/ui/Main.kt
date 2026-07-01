@@ -13,13 +13,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.bsoft.compose.bmusic.Route
@@ -34,7 +34,7 @@ import com.bsoft.compose.bmusic.viewmodels.SongsViewModel
 import kotlin.collections.listOf
 
 @Composable
-fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = viewModel()){
+fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = viewModel(), playingViewModel: PlayingViewModel = hiltViewModel()){
     val rootBackStack = remember { mutableStateListOf<Route>(Route.Home) }
 
     val content = LocalContext.current
