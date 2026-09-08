@@ -5,22 +5,29 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import com.bsoft.compose.bmusic.data.entities.PlayCounter
+import com.bsoft.compose.bmusic.data.entities.PlayCounterEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayerCounterDao {
+    @Query("SELECT * FROM player_counter ORDER BY played DESC")
+    fun getMostPlayed(): Flow<List<PlayCounterEntity>>
+
+    @Query("SELECT * FROM player_counter ORDER BY last_played DESC LIMIT 20")
+    fun getLastPlayed(): Flow<List<PlayCounterEntity>>
+
     @Query("SELECT * FROM player_counter ORDER BY title ASC")
-    fun getAll(): List<PlayCounter>
+    fun getAll(): Flow<List<PlayCounterEntity>>
 
     @Query("SELECT * FROM player_counter WHERE song LIKE :song LIMIT 1")
-    fun get(song: Long): PlayCounter
+    suspend fun get(song: Long): PlayCounterEntity?
 
     @Insert
-    fun insertAll(vararg playCounter: PlayCounter)
+    suspend fun insertAll(vararg playCounter: PlayCounterEntity)
 
     @Delete
-    fun delete(playCounter: PlayCounter)
+    suspend fun delete(playCounter: PlayCounterEntity)
 
     @Update
-    fun update(playCounter: PlayCounter)
+    suspend fun update(playCounter: PlayCounterEntity)
 }

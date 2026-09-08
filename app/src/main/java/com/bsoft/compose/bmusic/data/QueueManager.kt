@@ -1,30 +1,84 @@
 package com.bsoft.compose.bmusic.data
 
 import androidx.media3.common.MediaItem
-import com.bsoft.compose.bmusic.data.models.QueueEntry
-import com.bsoft.compose.bmusic.data.models.Song
+import androidx.media3.common.Player
+import com.bsoft.compose.bmusic.data.states.QueueState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.collections.emptyList
+import kotlinx.coroutines.flow.update
 
 class QueueManager {
-    private val _queue = MutableStateFlow<List<QueueEntry>>(emptyList())
-    val queue: StateFlow<List<QueueEntry>> = _queue.asStateFlow()
+    private var _originalQueue: List<MediaItem> =  emptyList()
+    val originalQueue: List<MediaItem>
+        get() = _originalQueue
 
-    private val _currentIndex = MutableStateFlow(0)
-    val currentIndex: StateFlow<Int> = _currentIndex.asStateFlow()
+    private val _state = MutableStateFlow(QueueState())
+    val state: StateFlow<QueueState> = _state.asStateFlow()
+    val currentQueue: List<MediaItem>
+        get() = _state.value.queue
 
-    fun setQueue(songs: List<Song>, startIndex: Int) {
-        _queue.value = songs.map {
-            QueueEntry(song = it, mediaItem = it.toMediaItem())
+    val currentOriginalIndex: Int
+        get() = _originalQueue.indexOf(currentQueue[_state.value.currentIndex!!])
+
+    private fun rotateAndShuffle(list: List<MediaItem>, targetIndex: Int): List<MediaItem> {
+        if (list.isEmpty()) return list
+        require(targetIndex in list.indices) { "Index out of bounds" }
+
+        val result = list.toMutableList()
+        val targetItem = result.removeAt(targetIndex)
+
+        result.shuffle()
+        result.add(0, targetItem)
+
+        return result
+    }
+
+    fun setQueue(items: List<MediaItem>, startIndex: Int): Int {
+        _originalQueue = items
+        if(_state.value.shuffle && startIndex >= 0 ){
+            val finalList = rotateAndShuffle(list = items, targetIndex = startIndex)
+
+            _state.update { it.copy(queue = finalList, currentIndex = 0) }
+            return 0
+        }else{
+            _state.update { it.copy(queue = items, currentIndex = startIndex) }
+            return startIndex
         }
-        _currentIndex.value = startIndex
     }
 
     fun updateCurrentIndex(index: Int) {
-        _currentIndex.value = index
+        _state.update { it.copy(currentIndex = index) }
     }
 
-    fun currentQueue(): List<MediaItem> = _queue.value.map { it.mediaItem }
+    fun toggleShuffle(): Int{
+        val shuffle = !_state.value.shuffle
+        return if(shuffle){
+            enableShuffle()
+        }else{
+            disableShuffle()
+        }
+    }
+
+    fun enableShuffle(): Int{
+        _state.update { it.copy(shuffle = true) }
+        _state.update {
+            it.copy(
+                queue = rotateAndShuffle(list = originalQueue, targetIndex = currentOriginalIndex),
+                currentIndex = 0)
+        }
+
+        return 0
+    }
+
+    fun disableShuffle(): Int{
+        _state.update { it.copy(shuffle = false) }
+        _state.update { it.copy(queue = originalQueue, currentIndex = currentOriginalIndex) }
+
+        return currentOriginalIndex
+    }
+
+    fun setRepeatMode(mode: @Player.RepeatMode Int){
+        _state.update { it.copy(repeatMode = mode) }
+    }
 }

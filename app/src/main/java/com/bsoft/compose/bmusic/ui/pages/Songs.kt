@@ -8,18 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bsoft.compose.bmusic.data.models.Song
-import com.bsoft.compose.bmusic.ui.components.Search
+import com.bsoft.compose.bmusic.ui.components.AlphabeticList
 import com.bsoft.compose.bmusic.ui.components.SongView
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 
 @Composable
 fun SongsPage(modifier: Modifier = Modifier, songs: List<Song> = emptyList(), chosen: (index: Int)-> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(songs.size) { index ->
-            val song = songs[index]
-            SongView(song = song){
-                chosen(index)
-            }
+    AlphabeticList(items = songs, header = { it.title.first() }) { index, item ->
+        SongView(song = item) {
+            chosen(index)
         }
     }
 }

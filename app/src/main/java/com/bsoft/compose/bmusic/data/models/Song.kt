@@ -9,6 +9,7 @@ import androidx.media3.common.MediaMetadata
 data class Song(val id: Long, val displayName: String, val title: String, val artist: String, val album: String, val duration: Long){
     val artworkUri: Uri
         get() = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+
     fun toMediaItem(): MediaItem {
         return MediaItem.Builder().setMediaId(id.toString()).setUri(artworkUri)
             .setMediaMetadata(

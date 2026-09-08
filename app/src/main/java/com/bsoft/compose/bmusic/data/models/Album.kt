@@ -9,8 +9,8 @@ import androidx.media3.common.MediaMetadata
 data class Album(val id: Long, val name: String, val artist: String, val songCount: Int){
     val artworkUri: Uri
         get() = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, id)
-    fun toMediaItem(): MediaItem {
-        return MediaItem.Builder().setMediaId("album_${id}")
+    fun toMediaItem(index: Int = 0): MediaItem {
+        return MediaItem.Builder().setMediaId("album_${id}_${index}")
             .setMediaMetadata(
                 MediaMetadata.Builder().setTitle(name).setIsBrowsable(true).build()
             ).build()

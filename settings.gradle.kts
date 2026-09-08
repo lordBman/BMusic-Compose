@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "BMusic"
 include(":app")
- 
+include(":recordable")

@@ -45,8 +45,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.Player
 import com.bsoft.compose.bmusic.R
 import com.bsoft.compose.bmusic.data.states.PlayingState
+import com.bsoft.compose.bmusic.data.states.QueueState
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Util
 import com.bsoft.compose.bmusic.utils.toTimeFormat
@@ -54,19 +56,20 @@ import com.bsoft.compose.bmusic.utils.toTimeFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Playing(
-    modifier: Modifier = Modifier, playingState: PlayingState,
+    modifier: Modifier = Modifier, playingState: PlayingState, queueState: QueueState,
+    openPlaylist: ()-> Unit = {},
     previous: ()-> Unit = {}, rewind: ()-> Unit = {},
     next: ()-> Unit = {}, forward: ()-> Unit = {},
-    queue: ()-> Unit = {}, playToggled: ()-> Unit = {},
-    repeatToggled: ()-> Unit = {}, shuffleToggled: ()-> Unit = {},
+    playToggled: ()-> Unit = {},
+    repeatToggled: (mode: @Player.RepeatMode Int)-> Unit = {}, shuffleToggled: ()-> Unit = {},
     favouriteToggled: ()-> Unit = {}, seek: (Long)-> Unit = {}
 ){
     val colorStops = arrayOf( 0.0f to Color.Transparent, 0.3f to MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), 0.55f to MaterialTheme.colorScheme.surface)
     val context = LocalContext.current
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(playingState.current) {
-        bitmap = Util.loadArtwork(context, playingState.current?.artworkUri, Size(400, 400))
+    LaunchedEffect(queueState.current) {
+        bitmap = Util.loadArtwork(context, queueState.current?.artworkUri, Size(400, 400))
     }
 
     Box(modifier = modifier.fillMaxWidth().height(450.dp)){
@@ -84,20 +87,20 @@ fun Playing(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            RepeatToggle(mode = playingState.repeatMode){ repeatToggled() }
-                            ShuffleToggle(active = playingState.shuffle) { shuffleToggled() }
+                            RepeatToggle(mode = queueState.repeatMode){ repeatToggled(it) }
+                            ShuffleToggle(active = queueState.shuffle) { shuffleToggled() }
                         }
                     }
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
-                        IconButton(onClick = { queue() },  colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary)) {
+                        IconButton(onClick = { openPlaylist() },  colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.primary)) {
                             Icon(imageVector = ImageVector.vectorResource(R.drawable.fluent__music_note_2_play_20_regular), contentDescription = null)
                         }
                     }
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally){
-                Text(playingState.current?.title ?: "_________" , fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
-                Text("${playingState.current?.artist ?: "____"}: ${playingState.current?.album ?: "____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
+                Text(queueState.current?.title ?: "_________" , fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis)
+                Text("${queueState.current?.artist ?: "____"}: ${queueState.current?.album ?: "____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis)
             }
             Row(modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallFloatingActionButton(onClick = { previous() }) {
@@ -122,9 +125,9 @@ fun Playing(
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
                 Text(playingState.position.toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
-                Text((playingState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
+                Text((queueState.current?.duration ?: 0).toTimeFormat(), fontSize = 12.sp, fontWeight = FontWeight.Light)
             }
-            Seeker(playingState = playingState) {
+            Seeker(playingState = playingState, queueState = queueState) {
                 seek(it)
             }
         }
@@ -135,6 +138,6 @@ fun Playing(
 @Composable
 private fun PlayingPreview(){
     BMusicTheme {
-        Playing(playingState = PlayingState())
+        Playing(playingState = PlayingState(), queueState = QueueState())
     }
 }
