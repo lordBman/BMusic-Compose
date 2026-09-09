@@ -3,6 +3,7 @@ package com.bsoft.compose.bmusic.modules
 import android.content.Context
 import com.bsoft.compose.bmusic.data.EqualizerManager
 import com.bsoft.compose.bmusic.data.QueueManager
+import com.bsoft.compose.bmusic.data.preferences.AppSettingsPreferences
 import com.bsoft.compose.bmusic.data.preferences.EqualizerPreferences
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
 import dagger.Module
@@ -33,5 +34,11 @@ object AppModule {
     @Singleton
     fun provideEqualizerPreferences(@ApplicationContext context: Context): EqualizerPreferences{
         return EqualizerPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppSettingsPreferences(@ApplicationContext context: Context): AppSettingsPreferences {
+        return AppSettingsPreferences(context)
     }
 }

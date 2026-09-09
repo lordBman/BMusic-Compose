@@ -120,7 +120,9 @@ fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = hiltViewMode
                 )
             }
             entry<Route.Settings>{
-                SettingsScreen(modifier = modifier)
+                SettingsScreen(modifier = modifier){
+                    rootBackStack.removeLastOrNull()
+                }
             }
             entry<Route.Playing>{
                 PlayingScreen(modifier = modifier, playingViewModel = playingViewModel, equalizerViewModel = equalizerViewModel,
