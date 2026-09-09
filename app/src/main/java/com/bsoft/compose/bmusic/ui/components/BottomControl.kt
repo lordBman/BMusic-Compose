@@ -36,17 +36,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.PlayingState
+import com.bsoft.compose.bmusic.data.states.PlayingState
+import com.bsoft.compose.bmusic.data.states.QueueState
 import com.bsoft.compose.bmusic.utils.Util
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomControl(modifier: Modifier = Modifier, state: PlayingState, clicked: ()-> Unit, playToggle: ()-> Unit){
+fun BottomControl(modifier: Modifier = Modifier, state: PlayingState, queueState: QueueState, clicked: ()-> Unit, playToggle: ()-> Unit){
     val context = LocalContext.current
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(state.current) {
-        bitmap = Util.loadArtwork(context, state.current?.artworkUri, Size(140, 140))
+    LaunchedEffect(queueState.current) {
+        bitmap = Util.loadArtwork(context, queueState.current?.artworkUri, Size(140, 140))
     }
 
     Surface(modifier = modifier.fillMaxWidth().clickable{ clicked() }, shadowElevation = 4.dp, shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)){
@@ -62,8 +63,8 @@ fun BottomControl(modifier: Modifier = Modifier, state: PlayingState, clicked: (
                     }
                 }
                 Column(modifier = Modifier.weight(1f)){
-                    Text(state.current?.title ?: "______", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
-                    Text("Artist: ${state.current?.artist ?: "_____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
+                    Text(queueState.current?.title ?: "______", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
+                    Text("Artist: ${queueState.current?.artist ?: "_____"}", fontSize = 12.sp, fontWeight = FontWeight.Light, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
                 }
                 IconButton(onClick = { playToggle() }) {
                     if(state.playing){
@@ -73,10 +74,10 @@ fun BottomControl(modifier: Modifier = Modifier, state: PlayingState, clicked: (
                     }
                 }
             }
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(3.dp),
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(1.dp),
                 progress = {
                     val current = state.position.toFloat()
-                    val total = (state.current?.duration ?: 0).toFloat()
+                    val total = (queueState.current?.duration ?: 0).toFloat()
                     current/total
                 }
             )

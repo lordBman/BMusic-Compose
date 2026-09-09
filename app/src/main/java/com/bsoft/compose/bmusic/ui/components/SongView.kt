@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -33,17 +35,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bsoft.compose.bmusic.R
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.data.models.Song
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Util
 import com.bsoft.compose.bmusic.utils.toTimeFormat
 
 @Composable
-fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
+fun SongView(modifier: Modifier = Modifier, selectable: Boolean = false, selected: Boolean = false, song: Song, clicked: ()-> Unit){
     val context = LocalContext.current
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(song) {
         bitmap = Util.loadArtwork(context, song.artworkUri, Size(140, 140))
     }
 
@@ -62,8 +64,11 @@ fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
                 Text(song.title, fontSize = 16.sp, fontWeight = FontWeight.Light, letterSpacing = 1.2.sp, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
                 Text("${song.duration.toTimeFormat()} ${song.artist}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary, overflow = TextOverflow.MiddleEllipsis, maxLines = 1)
             }
+            if(selectable){
+                Checkbox(modifier = Modifier.padding(0.dp), checked = selected, onCheckedChange = { clicked() })
+            }
         }
-        HorizontalDivider(thickness = 0.5.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
     }
 }
 
@@ -71,9 +76,16 @@ fun SongView(modifier: Modifier = Modifier, song: Song, clicked: ()-> Unit){
 @Composable
 private fun SongViewPreview(){
     BMusicTheme {
-        Surface {
-            SongView(song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000)){
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)){
+            Surface {
+                SongView(selectable = true, song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000)){
 
+                }
+            }
+            Surface(color = Color.Transparent){
+                SongView(song = Song(id = 0, displayName = "Display Name", title = "Song Title", artist = "Artist name", album = "Album Name", duration = 5000)){
+
+                }
             }
         }
     }

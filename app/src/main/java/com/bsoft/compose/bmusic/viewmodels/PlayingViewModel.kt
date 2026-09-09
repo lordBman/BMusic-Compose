@@ -2,26 +2,56 @@ package com.bsoft.compose.bmusic.viewmodels
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
-import com.bsoft.compose.bmusic.data.PlayingState
-import com.bsoft.compose.bmusic.data.Song
+import com.bsoft.compose.bmusic.data.QueueManager
+import com.bsoft.compose.bmusic.data.repositories.PlayerCounterRepository
+import com.bsoft.compose.bmusic.data.states.PlayingState
+import com.bsoft.compose.bmusic.data.states.QueueState
 import com.bsoft.compose.bmusic.services.PlaybackService
 import com.google.common.util.concurrent.MoreExecutors
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class PlayingViewModel: ViewModel() {
+@HiltViewModel
+class PlayingViewModel @Inject constructor(private val queueManager: QueueManager, private val playerCounterRepository: PlayerCounterRepository) : ViewModel() {
+
     private val mutableState = MutableStateFlow(PlayingState())
     val state = mutableState.asStateFlow()
+
+    val getLastPlayed = playerCounterRepository.getLastPlayed().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList()
+    )
+
+    val getMostPlayed = playerCounterRepository.getMostPlayed().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList()
+    )
+
+    val queueState = queueManager.state.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = QueueState()
+    )
 
     private var mediaBrowser: MediaBrowser? = null
 
@@ -45,7 +75,13 @@ class PlayingViewModel: ViewModel() {
             when (playbackState) {
                 Player.STATE_BUFFERING -> { /* Show loading spinner */ }
                 Player.STATE_READY -> { /* Hide loading spinner */ }
-                Player.STATE_ENDED -> { /* Play next video or loop */ }
+                Player.STATE_ENDED -> {
+                    /*queueManager.state.value.current?.let {
+                        viewModelScope.launch {
+                            playerCounterRepository.incrementCount(it)
+                        }
+                    }*/
+                }
                 Player.STATE_IDLE -> { /* Player stopped or failed */ }
             }
         }
@@ -70,9 +106,23 @@ class PlayingViewModel: ViewModel() {
             // Update track metadata like title or artwork in UI
             mediaItem?.let{ item ->
                 if (item.mediaMetadata.isPlayable == true){
-                    mutableState.update { it.copy(current = Song.fromMediaItem(item)) }
+                    queueManager.state.value.current?.let {
+                        viewModelScope.launch {
+                            playerCounterRepository.incrementCount(it)
+                        }
+                    }
+                    mediaBrowser?.let {
+                        queueManager.updateCurrentIndex(
+                            it.currentMediaItemIndex
+                        )
+                    }
                 }
             }
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            super.onRepeatModeChanged(repeatMode)
+            queueManager.setRepeatMode(repeatMode)
         }
     }
 
@@ -80,7 +130,7 @@ class PlayingViewModel: ViewModel() {
         if (mediaBrowser == null) {
             val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
             val controllerFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
-            val item = MediaItem.Builder().setMediaId("songs")
+            val item = MediaItem.Builder().setMediaId("songs_0")
                 .setMediaMetadata(
                     MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
                 ).build()
@@ -88,52 +138,77 @@ class PlayingViewModel: ViewModel() {
                 mediaBrowser = controllerFuture.get()
                 mediaBrowser?.addListener(playerListener)
                 mediaBrowser?.setMediaItem(item)
-                mediaBrowser?.seekToDefaultPosition(0)
                 mediaBrowser?.prepare()
             }, MoreExecutors.directExecutor())
         }
     }
 
     fun playSong(index: Int) {
-        val item = MediaItem.Builder().setMediaId("songs")
+        val item = MediaItem.Builder().setMediaId("songs_${index}")
         .setMediaMetadata(
             MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
         ).build()
 
-        mediaBrowser?.apply {
-            setMediaItem(item)
-            seekToDefaultPosition(index)
-            prepare()
-            play()
-        }
+        this.playLibrary(item)
     }
 
     fun playLibrary(mediaItem: MediaItem){
         mediaBrowser?.apply {
             setMediaItem(mediaItem)
             prepare()
+            sendCustomCommand(
+                SessionCommand(PlaybackService.SHUFFLE_COMMAND, Bundle.EMPTY),
+                Bundle.EMPTY
+            )
+            play()
+        }
+    }
+
+    fun playLibraryAll(mediaItem: MediaItem, shuffle: Boolean){
+        val bundle = Bundle()
+        shuffle.let {
+            bundle.putString(
+                PlaybackService.SHUFFLE_COMMAND_ARGS_SET,
+                if(it) PlaybackService.SHUFFLE_COMMAND_ON else PlaybackService.SHUFFLE_COMMAND_OFF)
+        }
+
+        mediaBrowser?.apply {
+            repeatMode = Player.REPEAT_MODE_ALL
+            setMediaItem(mediaItem)
+            prepare()
+            sendCustomCommand(
+                SessionCommand(PlaybackService.SHUFFLE_COMMAND, Bundle.EMPTY),
+                bundle
+            )
+            play()
+        }
+    }
+
+    fun playPlaylistIndex(index: Int){
+        mediaBrowser?.apply {
+            seekToDefaultPosition(index)
             play()
         }
     }
 
     fun togglePlayPause() {
-        mediaBrowser?.let {
-            if (it.isPlaying) it.pause() else it.play()
+        mediaBrowser?.apply {
+            if (isPlaying) pause() else play()
         }
     }
 
     fun next() {
-        mediaBrowser?.let {
-            if(it.hasNextMediaItem()){
-                it.seekToNextMediaItem()
+        mediaBrowser?.apply {
+            if(hasNextMediaItem()){
+                seekToNextMediaItem()
             }
         }
     }
 
     fun forward(){
-        mediaBrowser?.let{
-            it.seekForward()
-            it.seekTo(it.currentPosition + 10000)
+        mediaBrowser?.apply{
+            seekForward()
+            seekTo(currentPosition + 10000)
         }
     }
 
@@ -154,6 +229,31 @@ class PlayingViewModel: ViewModel() {
 
     fun seek(position: Long){
         mediaBrowser?.seekTo(position)
+    }
+
+    fun toggleRepeat(){
+        mediaBrowser?.let { player ->
+            if(player.availableCommands.contains(Player.COMMAND_SET_REPEAT_MODE)){
+                when(player.repeatMode){
+                    Player.REPEAT_MODE_ALL -> {
+                        player.repeatMode = Player.REPEAT_MODE_ONE
+                    }
+                    Player.REPEAT_MODE_ONE -> {
+                        player.repeatMode = Player.REPEAT_MODE_OFF
+                    }
+                    Player.REPEAT_MODE_OFF -> {
+                        player.repeatMode = Player.REPEAT_MODE_ALL
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleShuffle(){
+        mediaBrowser?.sendCustomCommand(
+            SessionCommand(PlaybackService.SHUFFLE_COMMAND, Bundle.EMPTY),
+            Bundle.EMPTY
+        )
     }
 
     override fun onCleared() {

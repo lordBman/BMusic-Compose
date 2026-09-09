@@ -1,6 +1,14 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.dagger.hilt.android)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas") // Add this block
 }
 
 android {
@@ -13,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.bsoft.compose.bmusic"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -40,6 +48,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":recordable"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -64,6 +73,18 @@ dependencies {
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.media3.session)
 
+    implementation(libs.dagger.hilt.android)
+    implementation(libs.hilt.lifecycle.viewmodel)
+    implementation(libs.error.prone.annotations)
+
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore)
+    implementation(libs.androidx.datastore.rxjava3)
+
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    testImplementation(libs.androidx.room.testing)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -71,4 +92,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    ksp(libs.androidx.room.compiler)
+    ksp(libs.dagger.hilt.android.compiler)
 }
