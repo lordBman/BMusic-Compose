@@ -44,11 +44,35 @@ fun BMusicTheme(
 ) {
     val colorScheme = when {
         accentColor != null -> {
-            if (darkTheme) {
-                DarkColorScheme.copy(primary = accentColor)
-            } else {
-                LightColorScheme.copy(primary = accentColor)
+            val baseScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+            val (secondaryColor, tertiaryColor) = when (accentColor) {
+                Color(0xFF2196F3) -> { // Blue
+                    if (darkTheme) Color(0xFF90CAF9) to Color(0xFF80DEEA)
+                    else Color(0xFF1976D2) to Color(0xFF00BCD4)
+                }
+                Color(0xFF9C27B0) -> { // Purple
+                    if (darkTheme) Color(0xFFCE93D8) to Color(0xFFF48FB1)
+                    else Color(0xFF7B1FA2) to Color(0xFFE040FB)
+                }
+                Color(0xFFFF9800) -> { // Orange
+                    if (darkTheme) Color(0xFFFFCC80) to Color(0xFFFFE082)
+                    else Color(0xFFF57C00) to Color(0xFFFFB74D)
+                }
+                Color(0xFF4CAF50) -> { // Green
+                    if (darkTheme) Color(0xFFA5D6A7) to Color(0xFF80CBC4)
+                    else Color(0xFF388E3C) to Color(0xFF81C784)
+                }
+                Color(0xFFE91E63) -> { // Pink
+                    if (darkTheme) Color(0xFFF48FB1) to Color(0xFFFFAB91)
+                    else Color(0xFFC2185B) to Color(0xFFFF4081)
+                }
+                else -> baseScheme.secondary to baseScheme.tertiary
             }
+            baseScheme.copy(
+                primary = accentColor,
+                secondary = secondaryColor,
+                tertiary = tertiaryColor
+            )
         }
 
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
