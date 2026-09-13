@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bsoft.compose.bmusic.data.serializables.AppSettingsData
 import com.bsoft.compose.bmusic.ui.Main
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.viewmodels.SettingsViewModel
@@ -23,7 +24,8 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val settingsState by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val settings = settingsState ?: AppSettingsData()
             val accentColor = Color(settings.accentColor)
 
             BMusicTheme(dynamicColor = true, accentColor = accentColor) {

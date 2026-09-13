@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bsoft.compose.bmusic.R
+import com.bsoft.compose.bmusic.data.serializables.AppSettingsData
 import com.bsoft.compose.bmusic.ui.theme.BMusicTheme
 import com.bsoft.compose.bmusic.utils.Route
 import com.bsoft.compose.bmusic.viewmodels.SettingsViewModel
@@ -49,7 +50,8 @@ import com.bsoft.compose.bmusic.viewmodels.SettingsViewModel
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(), back: ()-> Unit) {
-    val settings by viewModel.settings.collectAsState()
+    val settingsState by viewModel.settings.collectAsState()
+    val settings = settingsState ?: AppSettingsData()
 
     Scaffold(
         topBar = {
