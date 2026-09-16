@@ -167,15 +167,33 @@ class PlayingViewModel @Inject constructor(
         if (mediaBrowser == null) {
             val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
             val controllerFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
-            val item = MediaItem.Builder().setMediaId("songs_0")
-                .setMediaMetadata(
-                    MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
-                ).build()
+            
             controllerFuture.addListener({
                 mediaBrowser = controllerFuture.get()
                 mediaBrowser?.addListener(playerListener)
-                mediaBrowser?.setMediaItem(item)
-                mediaBrowser?.prepare()
+                
+                // Restore last played queue and song selection perfectly on startup if configured
+                viewModelScope.launch {
+                    appSettingsPreferences.data.collect { settings ->
+                        val savedMediaId = settings.lastPlayedMediaId
+                        if (!savedMediaId.isNullOrEmpty() && mediaBrowser?.currentMediaItem == null) {
+                            val initialItem = MediaItem.Builder().setMediaId(savedMediaId)
+                                .setMediaMetadata(
+                                    MediaMetadata.Builder().setIsBrowsable(true).build()
+                                ).build()
+                            mediaBrowser?.setMediaItem(initialItem)
+                            mediaBrowser?.repeatMode = settings.lastRepeatMode
+                            mediaBrowser?.prepare()
+                        } else if (mediaBrowser?.currentMediaItem == null) {
+                            val defaultItem = MediaItem.Builder().setMediaId("songs_0")
+                                .setMediaMetadata(
+                                    MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
+                                ).build()
+                            mediaBrowser?.setMediaItem(defaultItem)
+                            mediaBrowser?.prepare()
+                        }
+                    }
+                }
             }, MoreExecutors.directExecutor())
         }
     }
