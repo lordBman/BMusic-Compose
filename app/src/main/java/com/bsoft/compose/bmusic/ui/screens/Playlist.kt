@@ -168,10 +168,10 @@ fun PlaylistScreen(
                 scrollBehavior = scrollBehavior,
                 add = { id?.let { add(it, state.title)  } },
                 playAll = {
-
+                    playingViewModel.playLibraryList(state.songs, 0, false)
                 },
                 shuffle = {
-
+                    playingViewModel.playLibraryList(state.songs, 0, true)
                 },
                 menuClicked = {
                     showOverlay = ScreenOverlay(item = ScreenOverlay.Item.PlaylistMenu)
@@ -197,7 +197,7 @@ fun PlaylistScreen(
                         song = state.songs[index],
                         showMenu = true, menuClicked = {},
                         selectionMode = editMode
-                    ) {  }
+                    ) { playingViewModel.playLibraryList(state.songs, index, false) }
                 }
             }
         }
@@ -209,8 +209,8 @@ fun PlaylistScreen(
                         playlist = id,
                         playlistName = state.title,
                         addSongs = { add(it, state.title) },
-                        play = {},
-                        shuffle = {},
+                        play = { playingViewModel.playLibraryList(state.songs, 0, false) },
+                        shuffle = { playingViewModel.playLibraryList(state.songs, 0, true) },
                         rename = {},
                         edit = { editMode = true },
                         delete = {

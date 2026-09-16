@@ -236,6 +236,18 @@ class PlayingViewModel @Inject constructor(
         }
     }
 
+    fun playLibraryList(songs: List<Song>, startIndex: Int, shuffle: Boolean) {
+        val mediaItems = songs.map { it.toMediaItem() }
+        if (shuffle) {
+            val shuffledItems = mediaItems.shuffled()
+            mediaBrowser?.setMediaItems(shuffledItems, 0, 0L)
+        } else {
+            mediaBrowser?.setMediaItems(mediaItems, startIndex, 0L)
+        }
+        mediaBrowser?.prepare()
+        mediaBrowser?.play()
+    }
+
     fun playPlaylistIndex(index: Int){
         mediaBrowser?.apply {
             seekToDefaultPosition(index)

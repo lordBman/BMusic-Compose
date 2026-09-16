@@ -175,11 +175,15 @@ class PlaybackService: MediaLibraryService() {
         override fun onSetMediaItems(
             mediaSession: MediaSession, controller: MediaSession.ControllerInfo, mediaItems: List<MediaItem>, startIndex: Int, startPositionMs: Long
         ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            if (mediaItems.isEmpty()) {
+                return super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs)
+            }
             val first = mediaItems.first()
             val data = fetch(first.mediaId)
             if(data == null){
+                val newIndex = queueManager.setQueue(mediaItems, startIndex, "playlist")
                 return Futures.immediateFuture(
-                    MediaSession.MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs)
+                    MediaSession.MediaItemsWithStartPosition(queueManager.currentQueue, newIndex, startPositionMs)
                 )
             }else{
                 val newIndex = queueManager.setQueue(data.mediaItems, data.index, data.contextPrefix)
