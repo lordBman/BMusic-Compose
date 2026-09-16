@@ -99,38 +99,40 @@ fun PlaylistScreen(
     LaunchedEffect(playlistsOptions, id) {
         when(playlistsOptions){
             PlaylistsOptions.MostPlayed -> {
-                state = state.copy(
-                    songs = playingViewModel.getMostPlayed.value.mapNotNull {
-                        songsViewModel.loadSongsByID(it.song)
-                    },
-                    title = playlistsOptions.title,
-                    bg = playlistsOptions.bg
-                )
+                playingViewModel.getMostPlayed.collect { list ->
+                    state = state.copy(
+                        songs = list.mapNotNull { songsViewModel.loadSongsByID(it.song) },
+                        title = playlistsOptions.title,
+                        bg = playlistsOptions.bg
+                    )
+                }
             }
             PlaylistsOptions.RecentlyAdded -> {
-                state = state.copy(
-                    songs = songsViewModel.state.value.last,
-                    title = playlistsOptions.title,
-                    bg = playlistsOptions.bg
-                )
+                songsViewModel.state.collect { songsState ->
+                    state = state.copy(
+                        songs = songsState.last,
+                        title = playlistsOptions.title,
+                        bg = playlistsOptions.bg
+                    )
+                }
             }
             PlaylistsOptions.RecentlyPlayed -> {
-                state = state.copy(
-                    songs = playingViewModel.getLastPlayed.value.mapNotNull {
-                        songsViewModel.loadSongsByID(it.song)
-                    },
-                    title = playlistsOptions.title,
-                    bg = playlistsOptions.bg
-                )
+                playingViewModel.getLastPlayed.collect { list ->
+                    state = state.copy(
+                        songs = list.mapNotNull { songsViewModel.loadSongsByID(it.song) },
+                        title = playlistsOptions.title,
+                        bg = playlistsOptions.bg
+                    )
+                }
             }
             PlaylistsOptions.Favourites -> {
-                state = state.copy(
-                    songs = songsViewModel.favourites.value.mapNotNull {
-                        songsViewModel.loadSongsByID(it.song)
-                    },
-                    title = playlistsOptions.title,
-                    bg = playlistsOptions.bg
-                )
+                songsViewModel.favourites.collect { list ->
+                    state = state.copy(
+                        songs = list.mapNotNull { songsViewModel.loadSongsByID(it.song) },
+                        title = playlistsOptions.title,
+                        bg = playlistsOptions.bg
+                    )
+                }
             }
             else -> {
                 id?.let {

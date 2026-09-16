@@ -12,10 +12,11 @@ import javax.inject.Singleton
 class PlayerCounterRepository @Inject constructor(private val playerCounterDao: PlayerCounterDao){
     suspend fun incrementCount(song: Song){
         val result = playerCounterDao.get(song.id)
+        val currentTime = System.currentTimeMillis()
         if(result == null){
-            playerCounterDao.insertAll(PlayCounterEntity(song = song.id, title = song.title, played = 1))
+            playerCounterDao.insertAll(PlayCounterEntity(song = song.id, title = song.title, played = 1, lastPlayed = currentTime))
         }else{
-            playerCounterDao.update(result.copy(played = result.played + 1))
+            playerCounterDao.update(result.copy(played = result.played + 1, lastPlayed = currentTime))
         }
     }
 

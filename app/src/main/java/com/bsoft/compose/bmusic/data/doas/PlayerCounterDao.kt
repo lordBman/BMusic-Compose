@@ -19,7 +19,7 @@ interface PlayerCounterDao {
     @Query("SELECT * FROM player_counter ORDER BY title ASC")
     fun getAll(): Flow<List<PlayCounterEntity>>
 
-    @Query("SELECT * FROM player_counter WHERE song LIKE :song LIMIT 1")
+    @Query("SELECT * FROM player_counter WHERE song = :song LIMIT 1")
     suspend fun get(song: Long): PlayCounterEntity?
 
     @Insert

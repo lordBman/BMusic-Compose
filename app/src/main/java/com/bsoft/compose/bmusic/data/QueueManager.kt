@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class QueueManager {
+    private var currentContextPrefix: String = "songs"
+
     private var _originalQueue: List<MediaItem> =  emptyList()
     val originalQueue: List<MediaItem>
         get() = _originalQueue
@@ -19,7 +21,11 @@ class QueueManager {
         get() = _state.value.queue
 
     val currentOriginalIndex: Int
-        get() = _originalQueue.indexOf(currentQueue[_state.value.currentIndex!!])
+        get() {
+            val idx = _state.value.currentIndex ?: return 0
+            if (currentQueue.isEmpty() || idx !in currentQueue.indices) return 0
+            return _originalQueue.indexOf(currentQueue[idx]).coerceAtLeast(0)
+        }
 
     private fun rotateAndShuffle(list: List<MediaItem>, targetIndex: Int): List<MediaItem> {
         if (list.isEmpty()) return list
@@ -34,7 +40,8 @@ class QueueManager {
         return result
     }
 
-    fun setQueue(items: List<MediaItem>, startIndex: Int): Int {
+    fun setQueue(items: List<MediaItem>, startIndex: Int, contextPrefix: String = "songs"): Int {
+        this.currentContextPrefix = contextPrefix
         _originalQueue = items
         if(_state.value.shuffle && startIndex >= 0 ){
             val finalList = rotateAndShuffle(list = items, targetIndex = startIndex)
@@ -45,6 +52,10 @@ class QueueManager {
             _state.update { it.copy(queue = items, currentIndex = startIndex) }
             return startIndex
         }
+    }
+
+    fun getCurrentContextMediaId(): String {
+        return "${currentContextPrefix}_${currentOriginalIndex}"
     }
 
     fun updateCurrentIndex(index: Int) {
@@ -61,10 +72,11 @@ class QueueManager {
     }
 
     fun enableShuffle(): Int{
+        val currentIdx = currentOriginalIndex
         _state.update { it.copy(shuffle = true) }
         _state.update {
             it.copy(
-                queue = rotateAndShuffle(list = originalQueue, targetIndex = currentOriginalIndex),
+                queue = rotateAndShuffle(list = originalQueue, targetIndex = currentIdx),
                 currentIndex = 0)
         }
 
@@ -72,10 +84,11 @@ class QueueManager {
     }
 
     fun disableShuffle(): Int{
+        val currentIdx = currentOriginalIndex
         _state.update { it.copy(shuffle = false) }
-        _state.update { it.copy(queue = originalQueue, currentIndex = currentOriginalIndex) }
+        _state.update { it.copy(queue = originalQueue, currentIndex = currentIdx) }
 
-        return currentOriginalIndex
+        return currentIdx
     }
 
     fun setRepeatMode(mode: @Player.RepeatMode Int){

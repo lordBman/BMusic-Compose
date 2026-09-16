@@ -130,19 +130,16 @@ class PlayingViewModel @Inject constructor(
 
         // Triggered when moving to a new song/video in the playlist
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            // Update track metadata like title or artwork in UI
             mediaItem?.let{ item ->
-                if (item.mediaMetadata.isPlayable == true){
-                    queueManager.state.value.current?.let {
+                mediaBrowser?.let { browser ->
+                    queueManager.updateCurrentIndex(browser.currentMediaItemIndex)
+                    queueManager.state.value.current?.let { currentSong ->
                         viewModelScope.launch {
-                            playerCounterRepository.incrementCount(it)
+                            playerCounterRepository.incrementCount(currentSong)
                         }
                     }
-                    appSettingsPreferences.setLastPlayedMediaId(item.mediaId)
-                    mediaBrowser?.let {
-                        queueManager.updateCurrentIndex(
-                            it.currentMediaItemIndex
-                        )
+                    if (queueManager.currentQueue.isNotEmpty()) {
+                        appSettingsPreferences.setLastPlayedMediaId(queueManager.getCurrentContextMediaId())
                     }
                 }
             }

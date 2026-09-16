@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-private data class FetchData(val mediaItems: List<MediaItem>, val index: Int = 0)
+private data class FetchData(val mediaItems: List<MediaItem>, val index: Int = 0, val contextPrefix: String = "songs")
 
 @AndroidEntryPoint
 class PlaybackService: MediaLibraryService() {
@@ -115,7 +115,7 @@ class PlaybackService: MediaLibraryService() {
                 else -> {
                     when {
                         parentId.startsWith("album_") -> {
-                            val id = parentId.removePrefix("albums_").toLong()
+                            val id = parentId.removePrefix("album_").toLong()
                             songRepository.findSongsByAlbumId(id)
                         }
                         parentId.startsWith("artist_") -> {
@@ -135,7 +135,8 @@ class PlaybackService: MediaLibraryService() {
         override fun onGetItem(
             session: MediaLibrarySession, browser: MediaSession.ControllerInfo, mediaId: String
         ): ListenableFuture<LibraryResult<MediaItem>> {
-            val song = songRepository.findSongById(mediaId.toLong())
+            val id = mediaId.toLongOrNull()
+            val song = id?.let { songRepository.findSongById(it) }
             val item = song?.toMediaItem() ?: MediaItem.EMPTY
 
             return Futures.immediateFuture(LibraryResult.ofItem(item, null))
@@ -146,24 +147,26 @@ class PlaybackService: MediaLibraryService() {
             val splits = id.split("_")
             if(splits.size >= 2){
                 val name = splits.first()
-                val id: Long? = if(splits.size >= 3) splits[1].toLong() else null
+                val idVal: Long? = if(splits.size >= 3) splits[1].toLong() else null
                 val index = (if (splits.size >= 3) splits[2] else splits[1]).toInt()
+                val contextPrefix = if(idVal != null) "${name}_$idVal" else name
+
                 val resolvedItems = when(name){
                     "songs" -> songRepository.songs.map { it.toMediaItem() }
                     "album" -> {
-                        id?.let {
+                        idVal?.let {
                             songRepository.findSongsByAlbumId(it).map { song-> song.toMediaItem() }
                         }
                     }
                     "artist" -> {
-                        id?.let {
+                        idVal?.let {
                             songRepository.findArtistDetailsByArtistId(it).songs.map { song-> song.toMediaItem() }
                         }
                     }
                     else -> null
                 } ?: emptyList()
 
-                return FetchData(mediaItems = resolvedItems, index = index)
+                return FetchData(mediaItems = resolvedItems, index = index, contextPrefix = contextPrefix)
             }
             return null
         }
@@ -179,7 +182,7 @@ class PlaybackService: MediaLibraryService() {
                     MediaSession.MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs)
                 )
             }else{
-                val newIndex = queueManager.setQueue(data.mediaItems, data.index)
+                val newIndex = queueManager.setQueue(data.mediaItems, data.index, data.contextPrefix)
                 return Futures.immediateFuture(
                     MediaSession.MediaItemsWithStartPosition(queueManager.currentQueue, newIndex, startPositionMs)
                 )

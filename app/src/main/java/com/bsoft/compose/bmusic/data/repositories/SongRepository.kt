@@ -213,27 +213,50 @@ private fun fetchLastAdded(context: Context): Map<Long, Song>{
 
 
 class SongRepository(private val context: Context) {
-    private val _songs by lazy { fetchSongs(context) }
+    private var _songs: Map<Long, Song>? = null
+    private fun getSongsMap(): Map<Long, Song> {
+        if (_songs == null || _songs!!.isEmpty()) {
+            _songs = fetchSongs(context)
+        }
+        return _songs!!
+    }
     val songs: List<Song>
-        get() = _songs.values.toList()
+        get() = getSongsMap().values.toList()
 
-    private val _albums by lazy { fetchAlbums(context) }
+    private var _albums: Map<Long, Album>? = null
+    private fun getAlbumsMap(): Map<Long, Album> {
+        if (_albums == null || _albums!!.isEmpty()) {
+            _albums = fetchAlbums(context)
+        }
+        return _albums!!
+    }
     val albums: List<Album>
-        get() = _albums.values.toList()
+        get() = getAlbumsMap().values.toList()
 
-    private val _artists by lazy { fetchArtists(context) }
+    private var _artists: Map<Long, Artist>? = null
+    private fun getArtistsMap(): Map<Long, Artist> {
+        if (_artists == null || _artists!!.isEmpty()) {
+            _artists = fetchArtists(context)
+        }
+        return _artists!!
+    }
     val artists: List<Artist>
-        get() = _artists.values.toList()
+        get() = getArtistsMap().values.toList()
 
-    private val _last by lazy { fetchLastAdded(context) }
+    private var _last: Map<Long, Song>? = null
     val last: List<Song>
-        get() = _last.values.toList()
+        get() {
+            if (_last == null || _last!!.isEmpty()) {
+                _last = fetchLastAdded(context)
+            }
+            return _last!!.values.toList()
+        }
 
     private val albumStore: MutableMap<Long, List<Song>> = mutableMapOf()
     private val artistStore: MutableMap<Long, ArtistDetails> = mutableMapOf()
 
     fun findSongById(songId: Long): Song? {
-        val result = _songs[songId]
+        val result = getSongsMap()[songId]
         if(result == null){
             Log.e("Song Repository", "No song found with ID: $songId")
         }
@@ -241,7 +264,7 @@ class SongRepository(private val context: Context) {
     }
 
     fun findAlbumById(albumId: Long): Album? {
-        val result = _albums[albumId]
+        val result = getAlbumsMap()[albumId]
         if(result == null){
             Log.e("Song Repository", "No Album found with ID: $albumId")
         }
@@ -260,7 +283,7 @@ class SongRepository(private val context: Context) {
     }
 
     fun findArtistById(artistId: Long): Artist? {
-        val result = _artists[artistId]
+        val result = getArtistsMap()[artistId]
         if(result == null){
             Log.e("Song Repository", "No Artist found with ID: $artistId")
         }
