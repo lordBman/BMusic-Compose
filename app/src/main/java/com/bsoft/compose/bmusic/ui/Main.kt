@@ -30,10 +30,29 @@ import com.bsoft.compose.bmusic.utils.Route
 import com.bsoft.compose.bmusic.viewmodels.EqualizerViewModel
 import com.bsoft.compose.bmusic.viewmodels.PlayingViewModel
 import com.bsoft.compose.bmusic.viewmodels.SongsViewModel
+import com.bsoft.compose.bmusic.viewmodels.SettingsViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = hiltViewModel(), playingViewModel: PlayingViewModel = hiltViewModel(), equalizerViewModel: EqualizerViewModel = hiltViewModel()){
+fun Main(
+    modifier: Modifier = Modifier,
+    viewModel: SongsViewModel = hiltViewModel(),
+    playingViewModel: PlayingViewModel = hiltViewModel(),
+    equalizerViewModel: EqualizerViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
+){
+    val settingsState by settingsViewModel.settings.collectAsState()
+    val songsState by viewModel.state.collectAsState()
     val rootBackStack = remember { mutableStateListOf<Route>(Route.Home) }
 
     val content = LocalContext.current
@@ -71,70 +90,105 @@ fun Main(modifier: Modifier = Modifier, viewModel: SongsViewModel = hiltViewMode
         }
     }
 
-    NavDisplay(
-        backStack = rootBackStack,
-        onBack = { rootBackStack.removeLastOrNull() },
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(viewModelStoreOwner = checkNotNull(
-                LocalViewModelStoreOwner.current) {
-                        "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
-                    })
-        ),
-        entryProvider = entryProvider {
-            entry<Route.Home>{
-                HomeScreen(
-                    modifier = modifier, viewModel = viewModel, playingViewModel = playingViewModel,
-                    toScreen = { rootBackStack.add(it) },
-                    toAlbum = { rootBackStack.add(Route.Album(it.id)) },
-                    toArtist = { rootBackStack.add(Route.Artist(it.id)) },
-                    toPlaylist = { option, playlist -> rootBackStack.add(Route.Playlist(option, playlist = playlist?.first)) },
-                    toAddSongs = { id, name -> rootBackStack.add(Route.AddSongs(id, name)) }
-                )
-            }
-            entry<Route.Album>{
-                AlbumScreen(modifier = modifier, id = it.id, viewModel = viewModel,
-                    play = {  album, index -> playingViewModel.playLibrary(album.toMediaItem(index)) },
-                    playAll = {  item, shuffle ->
-                        playingViewModel.playLibraryAll(item, shuffle)
-                    },
-                    back = { rootBackStack.removeLastOrNull() })
-            }
-            entry<Route.Artist>{
-                ArtistScreen(modifier = modifier, id = it.id, viewModel = viewModel,
-                    toAlbum = {album -> rootBackStack.add(Route.Album(album.id)) },
-                    play = { artist, index -> playingViewModel.playLibrary(artist.toMediaItem(index)) },
-                    playAll = {  item, shuffle ->
-                        playingViewModel.playLibraryAll(item, shuffle)
-                    },
-                    back = { rootBackStack.removeLastOrNull() })
-            }
-            entry<Route.Playlist> {
-                PlaylistScreen(modifier = modifier,
-                    playingViewModel = playingViewModel,
-                    songsViewModel = viewModel,
-                    playlistsOptions = it.playlistsOptions,
-                    id = it.playlist,
-                    add = { playlist, title-> rootBackStack.add(Route.AddSongs(playlist = playlist, title = title)) },
-                    back = { rootBackStack.removeLastOrNull() }
-                )
-            }
-            entry<Route.Settings>{
-                SettingsScreen(modifier = modifier){
-                    rootBackStack.removeLastOrNull()
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavDisplay(
+            backStack = rootBackStack,
+            onBack = { rootBackStack.removeLastOrNull() },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(viewModelStoreOwner = checkNotNull(
+                    LocalViewModelStoreOwner.current) {
+                            "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+                        })
+            ),
+            entryProvider = entryProvider {
+                entry<Route.Home>{
+                    HomeScreen(
+                        modifier = modifier, viewModel = viewModel, playingViewModel = playingViewModel,
+                        toScreen = { rootBackStack.add(it) },
+                        toAlbum = { rootBackStack.add(Route.Album(it.id)) },
+                        toArtist = { rootBackStack.add(Route.Artist(it.id)) },
+                        toPlaylist = { option, playlist -> rootBackStack.add(Route.Playlist(option, playlist = playlist?.first)) },
+                        toAddSongs = { id, name -> rootBackStack.add(Route.AddSongs(id, name)) }
+                    )
+                }
+                entry<Route.Album>{
+                    AlbumScreen(modifier = modifier, id = it.id, viewModel = viewModel,
+                        play = {  album, index -> playingViewModel.playLibrary(album.toMediaItem(index)) },
+                        playAll = {  item, shuffle ->
+                            playingViewModel.playLibraryAll(item, shuffle)
+                        },
+                        back = { rootBackStack.removeLastOrNull() })
+                }
+                entry<Route.Artist>{
+                    ArtistScreen(modifier = modifier, id = it.id, viewModel = viewModel,
+                        toAlbum = {album -> rootBackStack.add(Route.Album(album.id)) },
+                        play = { artist, index -> playingViewModel.playLibrary(artist.toMediaItem(index)) },
+                        playAll = {  item, shuffle ->
+                            playingViewModel.playLibraryAll(item, shuffle)
+                        },
+                        back = { rootBackStack.removeLastOrNull() })
+                }
+                entry<Route.Playlist> {
+                    PlaylistScreen(modifier = modifier,
+                        playingViewModel = playingViewModel,
+                        songsViewModel = viewModel,
+                        playlistsOptions = it.playlistsOptions,
+                        id = it.playlist,
+                        add = { playlist, title-> rootBackStack.add(Route.AddSongs(playlist = playlist, title = title)) },
+                        back = { rootBackStack.removeLastOrNull() }
+                    )
+                }
+                entry<Route.Settings>{
+                    SettingsScreen(modifier = modifier){
+                        rootBackStack.removeLastOrNull()
+                    }
+                }
+                entry<Route.Playing>{
+                    PlayingScreen(modifier = modifier, playingViewModel = playingViewModel, equalizerViewModel = equalizerViewModel,
+                        back = { rootBackStack.removeLastOrNull() })
+                }
+                entry<Route.AddSongs> {
+                    AddSongsScreen(
+                        id = it.playlist, title = it.title,
+                        songsViewModel = viewModel,
+                        back = { rootBackStack.removeLastOrNull() }
+                    )
                 }
             }
-            entry<Route.Playing>{
-                PlayingScreen(modifier = modifier, playingViewModel = playingViewModel, equalizerViewModel = equalizerViewModel,
-                    back = { rootBackStack.removeLastOrNull() })
-            }
-            entry<Route.AddSongs> {
-                AddSongsScreen(
-                    id = it.playlist, title = it.title,
-                    songsViewModel = viewModel,
-                    back = { rootBackStack.removeLastOrNull() }
+        )
+
+        if (settingsState == null || !songsState.loaded) {
+            val message = if (settingsState == null) "Initializing..." else "Fetching songs, please wait..."
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "BMusic",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp)
                 )
             }
         }
-    )
+    }
 }

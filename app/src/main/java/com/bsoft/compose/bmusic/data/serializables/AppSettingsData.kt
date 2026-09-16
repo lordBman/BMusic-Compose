@@ -9,5 +9,8 @@ data class AppSettingsData(
     val rememberLastTab: Boolean = true,
     val hideShortSongs: Boolean = false,
     val shakeToChange: Boolean = false,
-    val soundFade: Boolean = false
+    val soundFade: Boolean = false,
+    val lastPlayedMediaId: String? = null,
+    val lastRepeatMode: Int = 0,
+    val lastShuffleMode: Boolean = false
 )

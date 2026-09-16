@@ -15,10 +15,10 @@ class SettingsViewModel @Inject constructor(
     private val appSettingsPreferences: AppSettingsPreferences
 ) : ViewModel() {
 
-    val settings: StateFlow<AppSettingsData> = appSettingsPreferences.data.stateIn(
+    val settings: StateFlow<AppSettingsData?> = appSettingsPreferences.data.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = AppSettingsData()
+        initialValue = null
     )
 
     fun setAccentColor(color: Int) = appSettingsPreferences.setAccentColor(color)

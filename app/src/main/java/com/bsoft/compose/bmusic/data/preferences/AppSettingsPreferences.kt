@@ -47,4 +47,22 @@ class AppSettingsPreferences(private val context: Context) {
             context.appSettingsDataStore.updateData { it.copy(soundFade = fade) }
         }
     }
+
+    fun setLastPlayedMediaId(mediaId: String?) {
+        CoroutineScope(Dispatchers.IO).launch {
+            context.appSettingsDataStore.updateData { it.copy(lastPlayedMediaId = mediaId) }
+        }
+    }
+
+    fun setLastRepeatMode(mode: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            context.appSettingsDataStore.updateData { it.copy(lastRepeatMode = mode) }
+        }
+    }
+
+    fun setLastShuffleMode(shuffle: Boolean) {
+        CoroutineScope(Dispatchers.IO).launch {
+            context.appSettingsDataStore.updateData { it.copy(lastShuffleMode = shuffle) }
+        }
+    }
 }

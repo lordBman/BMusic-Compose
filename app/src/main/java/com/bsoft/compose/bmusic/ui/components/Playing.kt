@@ -57,6 +57,7 @@ import com.bsoft.compose.bmusic.utils.toTimeFormat
 @Composable
 fun Playing(
     modifier: Modifier = Modifier, playingState: PlayingState, queueState: QueueState,
+    isFavorite: Boolean = false,
     openPlaylist: ()-> Unit = {},
     previous: ()-> Unit = {}, rewind: ()-> Unit = {},
     next: ()-> Unit = {}, forward: ()-> Unit = {},
@@ -82,7 +83,7 @@ fun Playing(
         Column(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
-                    FavouriteToggle { favouriteToggled() }
+                    FavouriteToggle(active = isFavorite) { favouriteToggled() }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {

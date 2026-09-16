@@ -15,25 +15,44 @@ import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.bsoft.compose.bmusic.data.QueueManager
+import com.bsoft.compose.bmusic.data.models.Song
+import com.bsoft.compose.bmusic.data.preferences.AppSettingsPreferences
+import com.bsoft.compose.bmusic.data.repositories.FavouriteRepository
 import com.bsoft.compose.bmusic.data.repositories.PlayerCounterRepository
 import com.bsoft.compose.bmusic.data.states.PlayingState
 import com.bsoft.compose.bmusic.data.states.QueueState
 import com.bsoft.compose.bmusic.services.PlaybackService
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PlayingViewModel @Inject constructor(private val queueManager: QueueManager, private val playerCounterRepository: PlayerCounterRepository) : ViewModel() {
+class PlayingViewModel @Inject constructor(
+    private val queueManager: QueueManager,
+    private val playerCounterRepository: PlayerCounterRepository,
+    private val favouriteRepository: FavouriteRepository,
+    private val appSettingsPreferences: AppSettingsPreferences
+) : ViewModel() {
 
     private val mutableState = MutableStateFlow(PlayingState())
     val state = mutableState.asStateFlow()
+
+    val isCurrentTrackFavorite: Flow<Boolean> = combine(
+        queueManager.state,
+        favouriteRepository.getAllFavorites()
+    ) { queueState, favorites ->
+        val currentId = queueState.current?.id
+        favorites.any { it.song == currentId }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val getLastPlayed = playerCounterRepository.getLastPlayed().stateIn(
         scope = viewModelScope,
@@ -52,6 +71,14 @@ class PlayingViewModel @Inject constructor(private val queueManager: QueueManage
         started = SharingStarted.Lazily,
         initialValue = QueueState()
     )
+
+    init {
+        viewModelScope.launch {
+            queueManager.state.collect {
+                appSettingsPreferences.setLastShuffleMode(it.shuffle)
+            }
+        }
+    }
 
     private var mediaBrowser: MediaBrowser? = null
 
@@ -111,6 +138,7 @@ class PlayingViewModel @Inject constructor(private val queueManager: QueueManage
                             playerCounterRepository.incrementCount(it)
                         }
                     }
+                    appSettingsPreferences.setLastPlayedMediaId(item.mediaId)
                     mediaBrowser?.let {
                         queueManager.updateCurrentIndex(
                             it.currentMediaItemIndex
@@ -123,6 +151,15 @@ class PlayingViewModel @Inject constructor(private val queueManager: QueueManage
         override fun onRepeatModeChanged(repeatMode: Int) {
             super.onRepeatModeChanged(repeatMode)
             queueManager.setRepeatMode(repeatMode)
+            appSettingsPreferences.setLastRepeatMode(repeatMode)
+        }
+    }
+
+    fun toggleFavorite() {
+        queueManager.state.value.current?.let { song ->
+            viewModelScope.launch {
+                favouriteRepository.toggleFavourite(song)
+            }
         }
     }
 

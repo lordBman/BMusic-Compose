@@ -69,6 +69,7 @@ fun PlayingScreen(modifier: Modifier = Modifier, playingViewModel: PlayingViewMo
 
     val playState by playingViewModel.state.collectAsStateWithLifecycle()
     val queueState by playingViewModel.queueState.collectAsStateWithLifecycle()
+    val isFavorite by playingViewModel.isCurrentTrackFavorite.collectAsStateWithLifecycle(initialValue = false)
 
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -121,6 +122,7 @@ fun PlayingScreen(modifier: Modifier = Modifier, playingViewModel: PlayingViewMo
                         }
                         1 ->{
                             PlayerControl(playingState = playState, queueState = queueState, bitmap = bitmap,
+                                isFavorite = isFavorite,
                                 next = { playingViewModel.next() },
                                 previous = { playingViewModel.previous() },
                                 playToggled = { playingViewModel.togglePlayPause() },
@@ -128,7 +130,8 @@ fun PlayingScreen(modifier: Modifier = Modifier, playingViewModel: PlayingViewMo
                                 rewind = { playingViewModel.rewind() },
                                 seek = { playingViewModel.seek(it) },
                                 repeatToggled = { playingViewModel.toggleRepeat() },
-                                shuffleToggled = { playingViewModel.toggleShuffle() }
+                                shuffleToggled = { playingViewModel.toggleShuffle() },
+                                favouriteToggled = { playingViewModel.toggleFavorite() }
                             )
                         }
                         2 ->{
