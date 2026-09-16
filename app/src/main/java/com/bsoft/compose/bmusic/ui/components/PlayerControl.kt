@@ -56,6 +56,7 @@ import com.bsoft.compose.bmusic.utils.toTimeFormat
 @Composable
 fun PlayerControl(
     modifier: Modifier = Modifier, playingState: PlayingState, queueState: QueueState, bitmap: Bitmap? = null,
+    isFavorite: Boolean = false,
     previous: ()-> Unit = {}, rewind: ()-> Unit = {},
     next: ()-> Unit = {}, forward: ()-> Unit = {},
     playToggled: ()-> Unit = {},
@@ -145,7 +146,7 @@ fun PlayerControl(
                     }
                 }
                 Surface(modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(30.dp), shadowElevation = 2.dp) {
-                    FavouriteToggle { favouriteToggled() }
+                    FavouriteToggle(active = isFavorite) { favouriteToggled() }
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally){
