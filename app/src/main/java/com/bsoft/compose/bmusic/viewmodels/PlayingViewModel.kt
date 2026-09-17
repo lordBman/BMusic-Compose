@@ -130,19 +130,8 @@ class PlayingViewModel @Inject constructor(
 
         // Triggered when moving to a new song/video in the playlist
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            mediaItem?.let{ item ->
-                mediaBrowser?.let { browser ->
-                    queueManager.updateCurrentIndex(browser.currentMediaItemIndex)
-                    queueManager.state.value.current?.let { currentSong ->
-                        viewModelScope.launch {
-                            playerCounterRepository.incrementCount(currentSong)
-                        }
-                    }
-                    if (queueManager.currentQueue.isNotEmpty()) {
-                        appSettingsPreferences.setLastPlayedMediaId(queueManager.getCurrentContextMediaId())
-                    }
-                }
-            }
+            // Logic moved to PlaybackService to ensure it runs even when UI is not active
+            // and to handle reactive queue refreshes for dynamic playlists.
         }
 
         override fun onRepeatModeChanged(repeatMode: Int) {
@@ -196,7 +185,7 @@ class PlayingViewModel @Inject constructor(
     }
 
     fun playSong(index: Int) {
-        val item = MediaItem.Builder().setMediaId("songs_${index}")
+        val item = MediaItem.Builder().setMediaId("songs#${index}")
         .setMediaMetadata(
             MediaMetadata.Builder().setTitle("Songs").setIsBrowsable(true).build()
         ).build()
@@ -236,8 +225,12 @@ class PlayingViewModel @Inject constructor(
         }
     }
 
-    fun playLibraryList(songs: List<Song>, startIndex: Int, shuffle: Boolean) {
-        val mediaItems = songs.map { it.toMediaItem() }
+    fun playLibraryList(songs: List<Song>, startIndex: Int, shuffle: Boolean, contextPrefix: String = "custom") {
+        val mediaItems = songs.mapIndexed { index, song ->
+            song.toMediaItem().buildUpon()
+                .setMediaId("${contextPrefix}#${index}|${song.id}")
+                .build()
+        }
         if (shuffle) {
             val shuffledItems = mediaItems.shuffled()
             mediaBrowser?.setMediaItems(shuffledItems, 0, 0L)

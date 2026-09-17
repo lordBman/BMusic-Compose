@@ -11,7 +11,7 @@ data class Artist(val id: Long, val name: String, val albumCount: Int, val songC
         get() = ContentUris.withAppendedId(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, id)
 
     fun toMediaItem(index: Int = 0): MediaItem {
-        return MediaItem.Builder().setMediaId("artist_${id}_${index}")
+        return MediaItem.Builder().setMediaId("artist_${id}#${index}")
             .setMediaMetadata(
                 MediaMetadata.Builder().setTitle(name).setIsBrowsable(true).build()
             ).build()

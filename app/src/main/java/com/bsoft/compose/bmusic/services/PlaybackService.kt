@@ -15,11 +15,23 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.bsoft.compose.bmusic.data.EqualizerManager
 import com.bsoft.compose.bmusic.data.QueueManager
+import com.bsoft.compose.bmusic.data.repositories.PlaylistRepository
 import com.bsoft.compose.bmusic.data.repositories.SongRepository
+import com.bsoft.compose.bmusic.data.repositories.FavouriteRepository
+import com.bsoft.compose.bmusic.data.repositories.PlayerCounterRepository
+import com.bsoft.compose.bmusic.data.models.Song
+import com.bsoft.compose.bmusic.data.preferences.AppSettingsPreferences
 import com.google.common.collect.ImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 private data class FetchData(val mediaItems: List<MediaItem>, val index: Int = 0, val contextPrefix: String = "songs")
@@ -40,6 +52,22 @@ class PlaybackService: MediaLibraryService() {
     @Inject
     lateinit var equalizerManager: EqualizerManager
 
+    @Inject
+    lateinit var playerCounterRepository: PlayerCounterRepository
+
+    @Inject
+    lateinit var favouriteRepository: FavouriteRepository
+
+    @Inject
+    lateinit var playlistRepository: PlaylistRepository
+
+    @Inject
+    lateinit var appSettingsPreferences: AppSettingsPreferences
+
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private var lastProcessedSongId: Long = -1
+
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
@@ -50,13 +78,57 @@ class PlaybackService: MediaLibraryService() {
                 super.onAudioSessionIdChanged(audioSessionId)
                 equalizerManager.attach(audioSessionID = audioSessionId)
             }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                mediaItem?.let { item ->
+                    val song = Song.fromMediaItem(item)
+                    if (song.id != 0L) {
+                        // 1. Avoid double-counting and redundant refreshes during shuffle or playlist shifts.
+                        // We only proceed if the song ID changed, or if it's an explicit repeat/auto-advance.
+                        if (song.id != lastProcessedSongId || reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT || reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
+                            lastProcessedSongId = song.id
+                            
+                            serviceScope.launch {
+                                // 2. Record play count (Updates DB, triggering UI refreshes)
+                                playerCounterRepository.incrementCount(song)
+
+                                // 3. Sync queue manager with the player's true position
+                                queueManager.updateCurrentIndex(exoPlayer.currentMediaItemIndex)
+
+                                // 4. Persist state for restoration
+                                if (queueManager.currentQueue.isNotEmpty()) {
+                                    appSettingsPreferences.setLastPlayedMediaId(queueManager.getCurrentContextMediaId())
+                                }
+
+                                // 5. Reactive Refresh for Recently Played: 
+                                // If we are in this dynamic context, we must rebuild the queue 
+                                // so that the "Next" songs are based on the updated DB order.
+                                val currentContext = queueManager.getCurrentContextMediaId().split("#")[0]
+                                if (currentContext == "recently_played") {
+                                    val newEntities = playerCounterRepository.getLastPlayed().first()
+                                    val newItems = newEntities.mapNotNull { entity ->
+                                        songRepository.findSongById(entity.song)?.toMediaItem()
+                                    }
+
+                                    val foundIdx = newItems.indexOfFirst { it.mediaId == song.id.toString() }
+                                    if (foundIdx != -1) {
+                                        queueManager.setQueue(newItems, foundIdx, "recently_played")
+                                        // Update the player's queue without interrupting current playback
+                                        exoPlayer.setMediaItems(newItems, foundIdx, exoPlayer.currentPosition)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         })
-        //equalizerManager.attach(audioSessionID = exoPlayer.audioSessionId)
         mediaLibrarySession = MediaLibrarySession.Builder(this, exoPlayer, LibraryCallback()).build()
     }
 
     // Remember to release the player and media session in onDestroy
     override fun onDestroy() {
+        serviceJob.cancel()
         mediaLibrarySession.run {
             player.release()
             release()
@@ -144,31 +216,83 @@ class PlaybackService: MediaLibraryService() {
 
         private fun fetch(id: String): FetchData?{
             Log.d("fetching id data", id)
-            val splits = id.split("_")
-            if(splits.size >= 2){
-                val name = splits.first()
-                val idVal: Long? = if(splits.size >= 3) splits[1].toLong() else null
-                val index = (if (splits.size >= 3) splits[2] else splits[1]).toInt()
-                val contextPrefix = if(idVal != null) "${name}_$idVal" else name
+            // 1. Separate target song ID for positioning
+            val parts = id.split("|")
+            val contextWithIndex = parts[0]
+            val targetSongId = if (parts.size > 1) parts[1].toLongOrNull() else null
 
-                val resolvedItems = when(name){
-                    "songs" -> songRepository.songs.map { it.toMediaItem() }
-                    "album" -> {
-                        idVal?.let {
-                            songRepository.findSongsByAlbumId(it).map { song-> song.toMediaItem() }
+            // 2. Separate prefix from index using the new '#' delimiter
+            val contextParts = contextWithIndex.split("#")
+            if (contextParts.size < 2) return null
+
+            val contextPrefix = contextParts[0]
+            val rawIndex = contextParts[1].toIntOrNull() ?: 0
+
+            // 3. Parse prefix into name and optional resource ID (for albums/artists)
+            val prefixSplits = contextPrefix.split("_")
+            val name = prefixSplits[0]
+            val idVal: Long? = if (prefixSplits.size >= 2) prefixSplits[1].toLongOrNull() else null
+
+            val resolvedItems = when(name){
+                "songs" -> songRepository.songs.map { it.toMediaItem() }
+                "album" -> {
+                    idVal?.let {
+                        songRepository.findSongsByAlbumId(it).map { song-> song.toMediaItem() }
+                    }
+                }
+                "artist" -> {
+                    idVal?.let {
+                        songRepository.findArtistDetailsByArtistId(it).songs.map { song-> song.toMediaItem() }
+                    }
+                }
+                "recently" -> { // Handles "recently_played" and "recently_added"
+                    if (contextPrefix == "recently_played") {
+                        runBlocking {
+                            playerCounterRepository.getLastPlayed().first().mapNotNull { entity ->
+                                songRepository.findSongById(entity.song)?.toMediaItem()
+                            }
+                        }
+                    } else if (contextPrefix == "recently_added") {
+                        songRepository.last.map { it.toMediaItem() }
+                    } else null
+                }
+                "most" -> { // Handles "most_played"
+                    if (contextPrefix == "most_played") {
+                        runBlocking {
+                            playerCounterRepository.getMostPlayed().first().mapNotNull { entity ->
+                                songRepository.findSongById(entity.song)?.toMediaItem()
+                            }
+                        }
+                    } else null
+                }
+                "favourites" -> {
+                    runBlocking {
+                        favouriteRepository.getAllFavorites().first().mapNotNull { entity ->
+                            songRepository.findSongById(entity.song)?.toMediaItem()
                         }
                     }
-                    "artist" -> {
-                        idVal?.let {
-                            songRepository.findArtistDetailsByArtistId(it).songs.map { song-> song.toMediaItem() }
+                }
+                "playlist" -> {
+                    idVal?.let { playlistId ->
+                        runBlocking {
+                            playlistRepository.getSongsFromPlayList(playlistId).map { playlistSong ->
+                                playlistSong.song.toMediaItem()
+                            }
                         }
                     }
-                    else -> null
-                } ?: emptyList()
+                }
+                else -> null
+            } ?: emptyList()
 
-                return FetchData(mediaItems = resolvedItems, index = index, contextPrefix = contextPrefix)
+            // 4. Resolve final index (target song ID takes priority over raw index)
+            val finalIndex = if (targetSongId != null) {
+                val foundIdx = resolvedItems.indexOfFirst { it.mediaId == targetSongId.toString() }
+                if (foundIdx != -1) foundIdx else rawIndex
+            } else {
+                rawIndex
             }
-            return null
+
+            return FetchData(mediaItems = resolvedItems, index = finalIndex, contextPrefix = contextPrefix)
         }
 
         @OptIn(UnstableApi::class)
@@ -223,9 +347,8 @@ class PlaybackService: MediaLibraryService() {
                     }
 
                     mediaLibrarySession.run {
-                        player.setMediaItems(queueManager.currentQueue, newIndex,position)
+                        player.setMediaItems(queueManager.currentQueue, newIndex, position)
                         player.prepare()
-                        //player.play()
                     }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }

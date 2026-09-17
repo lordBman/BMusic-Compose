@@ -162,7 +162,7 @@ fun PlaylistsPage(
                 items(count = searchResults.size) { index ->
                     val song = searchResults[index]
                     SongView(song = song){
-                        //onResultClick(song)
+                        playingViewModel.playLibraryList(songs = searchResults, startIndex = index, shuffle = false)
                     }
                 }
             }

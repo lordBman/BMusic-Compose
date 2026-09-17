@@ -158,6 +158,16 @@ fun PlaylistScreen(
         editMode = false
     }
 
+    val contextPrefix = remember(playlistsOptions, id) {
+        when (playlistsOptions) {
+            PlaylistsOptions.MostPlayed -> "most_played"
+            PlaylistsOptions.RecentlyAdded -> "recently_added"
+            PlaylistsOptions.RecentlyPlayed -> "recently_played"
+            PlaylistsOptions.Favourites -> "favourites"
+            else -> id?.let { "playlist_$it" } ?: "custom"
+        }
+    }
+
     Image(modifier = Modifier.fillMaxSize().blur(radius = 10.dp, edgeTreatment = BlurredEdgeTreatment.Rectangle), painter = painterResource(id = state.bg), contentScale = ContentScale.Crop, contentDescription = null)
     Scaffold(modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = Color.Black.copy(alpha = 0.2f),
@@ -168,10 +178,10 @@ fun PlaylistScreen(
                 scrollBehavior = scrollBehavior,
                 add = { id?.let { add(it, state.title)  } },
                 playAll = {
-                    playingViewModel.playLibraryList(state.songs, 0, false)
+                    playingViewModel.playLibraryList(state.songs, 0, false, contextPrefix)
                 },
                 shuffle = {
-                    playingViewModel.playLibraryList(state.songs, 0, true)
+                    playingViewModel.playLibraryList(state.songs, 0, true, contextPrefix)
                 },
                 menuClicked = {
                     showOverlay = ScreenOverlay(item = ScreenOverlay.Item.PlaylistMenu)
@@ -192,12 +202,12 @@ fun PlaylistScreen(
     ) { padding ->
         Surface(modifier = modifier.padding(padding), color = Color.Transparent) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(count = state.songs.size) { index ->
+                items(count = state.songs.size, key = { state.songs[it].id }) { index ->
                     QueueSongView(
                         song = state.songs[index],
                         showMenu = true, menuClicked = {},
                         selectionMode = editMode
-                    ) { playingViewModel.playLibraryList(state.songs, index, false) }
+                    ) { playingViewModel.playLibraryList(state.songs, index, false, contextPrefix) }
                 }
             }
         }
@@ -209,8 +219,8 @@ fun PlaylistScreen(
                         playlist = id,
                         playlistName = state.title,
                         addSongs = { add(it, state.title) },
-                        play = { playingViewModel.playLibraryList(state.songs, 0, false) },
-                        shuffle = { playingViewModel.playLibraryList(state.songs, 0, true) },
+                        play = { playingViewModel.playLibraryList(state.songs, 0, false, contextPrefix) },
+                        shuffle = { playingViewModel.playLibraryList(state.songs, 0, true, contextPrefix) },
                         rename = {},
                         edit = { editMode = true },
                         delete = {

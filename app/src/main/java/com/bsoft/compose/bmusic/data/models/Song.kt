@@ -22,7 +22,14 @@ data class Song(val id: Long, val displayName: String, val title: String, val ar
 
     companion object{
         fun fromMediaItem(mediaItem: MediaItem): Song{
-            val id = mediaItem.mediaId.toLong()
+            val rawId = mediaItem.mediaId
+            val id = if (rawId.contains("|")) {
+                rawId.split("|").last().toLongOrNull() ?: 0L
+            } else if (rawId.contains("#")) {
+                rawId.split("#").last().toLongOrNull() ?: 0L
+            } else {
+                rawId.toLongOrNull() ?: 0L
+            }
             val displayName = mediaItem.mediaMetadata.displayTitle?.toString() ?: "Unknown Name"
             val title = mediaItem.mediaMetadata.title?.toString() ?: "Unknown Title"
             val artist = mediaItem.mediaMetadata.artist?.toString() ?: "Unknown Artist"

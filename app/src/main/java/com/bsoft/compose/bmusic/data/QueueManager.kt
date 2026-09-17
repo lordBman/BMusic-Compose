@@ -55,7 +55,8 @@ class QueueManager {
     }
 
     fun getCurrentContextMediaId(): String {
-        return "${currentContextPrefix}_${currentOriginalIndex}"
+        val currentSongId = state.value.current?.id ?: -1L
+        return "${currentContextPrefix}#${currentOriginalIndex}|$currentSongId"
     }
 
     fun updateCurrentIndex(index: Int) {
