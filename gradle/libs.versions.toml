@@ -23,6 +23,9 @@ hilt-viewmodel = "1.4.0"
 appcompat = "1.8.0"
 material = "1.14.0"
 ui-util = "1.12.0"
+mockk = "1.14.11"
+turbine = "1.2.1"
+kotlinxCoroutinesTest = "1.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -73,6 +76,9 @@ dagger-hilt-android-compiler = { group = "com.google.dagger", name = "hilt-andro
 hilt-lifecycle-viewmodel = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "hilt-viewmodel" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
